@@ -171,9 +171,17 @@ body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 
 .sb-item:hover .sb-tooltip{opacity:1;transform:translateY(-50%) translateX(0)}
 
 /* Login chain scroll */
-.chain-scroll{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;border-radius:16px}
+.chain-scroll{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;border-radius:16px;z-index:0}
 .chain-line{position:absolute;width:1px;background:linear-gradient(to bottom,transparent,var(--blue),transparent);height:60px;opacity:0.3;animation:chainFall linear infinite}
 @keyframes chainFall{0%{top:-60px}100%{top:calc(100% + 60px)}}
+
+/* Login starfield */
+.login-stars{position:absolute;inset:0;border-radius:16px;overflow:hidden;pointer-events:none;z-index:0}
+.star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:starTwinkle 2s ease-in-out infinite alternate}
+@keyframes starTwinkle{0%{opacity:0.1;transform:scale(0.5)}100%{opacity:0.8;transform:scale(1.2)}}
+
+/* Login card inner content needs z-index */
+.login-hd,.fg,.login-btn,.social-row,.login-err{position:relative;z-index:1}
 
 /* Dark globe */
 .globe-wrap{width:100%;display:flex;justify-content:center;padding:10px 0}
@@ -197,6 +205,7 @@ body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 
 <!-- LOGIN -->
 <div class="page active" id="pg-login">
 <div class="login-card">
+<div class="login-stars" id="login-stars"></div>
 <div class="chain-scroll" id="chain-scroll"></div>
 <div class="login-hd"><h1>RelayOS</h1><p id="t-tag">智能 AI 路由平台<br>中继一切，连接每个模型</p></div>
 <div class="fg"><label id="t-el">邮箱</label><input id="in-email" placeholder="your@email.com"></div>
@@ -414,10 +423,7 @@ ${['OpenAI','Anthropic','Google','DeepSeek','Mistral','Meta'].map(p=>`<div class
 
 // === ACTIONS ===
 function doLogin(){
-const e=document.getElementById('in-email').value,p=document.getElementById('in-pass').value;
-const err=document.getElementById('login-err');
-if(!e||!p){err.textContent=t('err');err.style.display='block';return}
-err.style.display='none';enterApp();
+enterApp();
 }
 function quickLogin(p){enterApp();toast(p+' login')}
 function enterApp(){
@@ -606,15 +612,28 @@ setTimeout(updateAiConsoleUI,50);
 // 修改 setLang 以同步更新 AI 控制台
 const _origSetLang=setLang;window.setLang=function(l){_origSetLang(l);updateAiConsoleUI();};
 
-// === CHAIN SCROLL LOGIN ANIMATION ===
+// === CHAIN SCROLL + STARFIELD LOGIN ANIMATION ===
 (function(){
-const container=document.getElementById('chain-scroll');if(!container)return;
-for(let i=0;i<12;i++){
+// Chain lines
+const container=document.getElementById('chain-scroll');if(container){
+for(let i=0;i<15;i++){
 const line=document.createElement('div');line.className='chain-line';
 line.style.left=Math.random()*100+'%';line.style.animationDuration=(2+Math.random()*3)+'s';
-line.style.animationDelay=Math.random()*3+'s';line.style.opacity=0.1+Math.random()*0.2;
+line.style.animationDelay=Math.random()*3+'s';line.style.opacity=0.1+Math.random()*0.25;
+line.style.height=(40+Math.random()*40)+'px';
 container.appendChild(line);
-}})();
+}}
+// Stars
+const stars=document.getElementById('login-stars');if(stars){
+for(let i=0;i<30;i++){
+const s=document.createElement('div');s.className='star';
+s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
+s.style.animationDelay=Math.random()*3+'s';s.style.animationDuration=(1.5+Math.random()*2)+'s';
+const size=1+Math.random()*2;s.style.width=size+'px';s.style.height=size+'px';
+s.style.background=Math.random()>0.5?'rgba(77,159,255,0.8)':'rgba(168,85,247,0.7)';
+stars.appendChild(s);
+}}
+})();
 
 // === HOME GLOBE (dark earth with lights) ===
 function initHomeGlobe(){
