@@ -1,710 +1,337 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>RelayOS</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RelayOS Demo</title>
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a14;--sidebar:#0f0f1a;--panel:#13131f;--glass:rgba(18,18,35,0.7);--glass-border:rgba(100,100,255,0.1);--blue:#4d9fff;--purple:#a855f7;--cyan:#22d3ee;--green:#22c55e;--gradient:linear-gradient(135deg,#4d9fff,#a855f7);--text:#e2e8f0;--dim:#64748b;--radius:12px;--glow:0 0 20px rgba(77,159,255,0.2)}
-html,body{height:100%;font-family:Inter,MiSans,system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
-button{font-family:inherit;cursor:pointer}input,textarea{font-family:inherit}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(77,159,255,0.2);border-radius:2px}
-
-/* BG */
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
-.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(77,159,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(77,159,255,0.02) 1px,transparent 1px);background-size:50px 50px}
-
-/* Lang */
-.lang-sw{position:fixed;top:14px;right:14px;z-index:999;display:flex;gap:3px;background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;padding:3px;backdrop-filter:blur(10px)}
-.lang-sw button{padding:4px 12px;border:none;border-radius:4px;background:transparent;color:var(--dim);font-size:11px;font-weight:600;transition:.2s}
-.lang-sw button.on{background:rgba(77,159,255,0.2);color:var(--blue)}
-
-/* Pages */
-.page{display:none;width:100%;height:100%;position:relative;z-index:2}.page.active{display:flex}
-
-/* LOGIN */
-#pg-login{align-items:center;justify-content:center}
-.login-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:16px;padding:44px 38px;width:380px;box-shadow:0 8px 50px rgba(0,0,0,0.5),var(--glow);position:relative;overflow:hidden}
-.login-card::before{content:'';position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent,rgba(77,159,255,0.04),transparent 25%);animation:spin 10s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.login-hd{text-align:center;margin-bottom:28px;position:relative}
-.login-hd h1{font-size:30px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.login-hd p{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
-.fg{margin-bottom:16px;position:relative}
-.fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
-.fg input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(100,100,255,0.12);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:.2s}
-.fg input:focus{border-color:var(--blue);box-shadow:0 0 10px rgba(77,159,255,0.15)}
-.login-btn{width:100%;padding:12px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:14px;font-weight:600;transition:.2s;margin-top:6px}
-.login-btn:hover{box-shadow:0 4px 20px rgba(77,159,255,0.4)}
-.login-btn:active{transform:scale(.98)}
-.social-row{margin-top:24px;text-align:center}
-.social-row p{font-size:11px;color:var(--dim);margin-bottom:10px}
-.social-row .icons{display:flex;justify-content:center;gap:12px}
-.social-row .si{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;transition:.2s;cursor:pointer}
-.social-row .si:hover{border-color:var(--blue);box-shadow:var(--glow);transform:translateY(-1px)}
-.social-row .si svg{width:16px;height:16px;fill:var(--dim)}
-.social-row .si:hover svg{fill:var(--blue)}
-.login-err{color:#f87171;font-size:11px;text-align:center;margin-top:6px;display:none}
-
-/* APP */
-#pg-app{height:100%}
-.sidebar{width:62px;background:var(--sidebar);border-right:1px solid var(--glass-border);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0}
-.sb-logo{width:34px;height:34px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;margin-bottom:14px}
-.sb-item{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:.2s;color:var(--dim);position:relative;cursor:pointer}
-.sb-item:hover{background:rgba(77,159,255,0.08);color:var(--blue)}
-.sb-item.on{background:rgba(77,159,255,0.12);color:var(--blue)}
-.sb-item.on::after{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--blue);border-radius:0 3px 3px 0}
-.sb-item svg{width:18px;height:18px}
-.sb-sep{flex:1}
-.sb-item.out{color:#f87171}.sb-item.out:hover{background:rgba(248,113,113,0.08)}
-
-/* Main */
-.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.top-bar{padding:12px 20px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;background:rgba(15,15,26,0.8);backdrop-filter:blur(8px)}
-.top-bar h2{font-size:15px;font-weight:600}
-.top-right{display:flex;align-items:center;gap:10px}
-.avatar{width:28px;height:28px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-
-/* Tab content */
-.tab-body{flex:1;overflow-y:auto;padding:20px;display:none;flex-direction:column;gap:16px}
-.tab-body.on{display:flex}
-
-/* Cards */
-.card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;backdrop-filter:blur(10px);transition:.2s}
-.card:hover{border-color:rgba(77,159,255,0.2)}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.card-title{font-size:13px;font-weight:600;margin-bottom:4px}
-.card-desc{font-size:11px;color:var(--dim)}
-.card-row{display:flex;gap:12px;flex-wrap:wrap}
-
-/* Stats row */
-.stats-row{display:flex;gap:12px}
-.stat{flex:1;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:14px;transition:.2s}
-.stat:hover{border-color:rgba(77,159,255,0.2);box-shadow:var(--glow)}
-.stat-label{font-size:10px;color:var(--dim);text-transform:uppercase}
-.stat-val{font-size:20px;font-weight:700;margin-top:2px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-/* Chat */
-.chat-wrap{display:flex;flex:1;gap:0;min-height:0}
-.chat-list{width:240px;border-right:1px solid var(--glass-border);overflow-y:auto;padding:12px}
-.chat-item{padding:10px 12px;border-radius:8px;cursor:pointer;transition:.15s;margin-bottom:4px}
-.chat-item:hover{background:rgba(77,159,255,0.06)}
-.chat-item.on{background:rgba(77,159,255,0.1)}
-.chat-item .ci-name{font-size:12px;font-weight:600}
-.chat-item .ci-msg{font-size:11px;color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chat-main{flex:1;display:flex;flex-direction:column}
-.chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-.msg{max-width:70%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;animation:fadeUp .3s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.msg.user{background:rgba(77,159,255,0.12);align-self:flex-end;border-bottom-right-radius:4px}
-.msg.ai{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);align-self:flex-start;border-bottom-left-radius:4px}
-.chat-input-bar{padding:12px 20px;border-top:1px solid var(--glass-border);display:flex;gap:10px;align-items:center}
-.chat-input-bar input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:.2s}
-.chat-input-bar input:focus{border-color:var(--blue)}
-.send-btn{padding:8px 16px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:12px;font-weight:600;transition:.2s}
-.send-btn:hover{box-shadow:0 2px 12px rgba(77,159,255,0.4)}
-
-/* Tags */
-.tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(77,159,255,0.1);color:var(--blue);margin-right:4px}
-.tag.green{background:rgba(34,197,94,0.1);color:var(--green)}
-.tag.purple{background:rgba(168,85,247,0.1);color:var(--purple)}
-
-/* Image gallery */
-.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.img-card{aspect-ratio:1;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:40px;cursor:pointer;transition:.2s;overflow:hidden}
-.img-card:hover{border-color:rgba(77,159,255,0.3);box-shadow:var(--glow);transform:scale(1.02)}
-
-/* Memory */
-.mem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.mem-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:.2s}
-.mem-card:hover{border-color:rgba(168,85,247,0.3);box-shadow:0 0 15px rgba(168,85,247,0.15)}
-
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:8px;padding:10px 20px;font-size:12px;z-index:9999;transition:.3s}
-.toast.show{transform:translateX(-50%) translateY(0)}
-
-/* AI Console */
-.ai-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9997;box-shadow:0 4px 24px rgba(77,159,255,0.5),0 4px 24px rgba(168,85,247,0.3);transition:transform .3s;animation:fabPulse 3s infinite}
-.ai-fab:hover{transform:scale(1.08) rotate(5deg)}
-@keyframes fabPulse{0%,100%{box-shadow:0 4px 24px rgba(77,159,255,0.5),0 4px 24px rgba(168,85,247,0.3)}50%{box-shadow:0 4px 40px rgba(77,159,255,0.7),0 4px 40px rgba(168,85,247,0.5)}}
-.ai-fab svg{width:26px;height:26px;fill:#fff}
-.ai-fab.hide{display:none}
-.ai-console{position:fixed;bottom:24px;right:24px;width:420px;max-width:calc(100vw - 48px);height:560px;max-height:calc(100vh - 48px);background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:16px;z-index:9998;display:none;flex-direction:column;overflow:hidden;box-shadow:0 10px 60px rgba(0,0,0,0.6),0 0 40px rgba(77,159,255,0.2);animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-.ai-console.on{display:flex}
-.ai-hd{padding:14px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,rgba(77,159,255,0.08),rgba(168,85,247,0.08))}
-.ai-hd-left{display:flex;align-items:center;gap:8px}
-.ai-hd-icon{width:28px;height:28px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center}
-.ai-hd-icon svg{width:16px;height:16px;fill:#fff}
-.ai-hd-title{font-size:13px;font-weight:700}
-.ai-hd-status{font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px}
-.ai-hd-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.ai-close{background:transparent;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px}
-.ai-close:hover{background:rgba(255,255,255,0.05);color:var(--text)}
-.ai-body{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px}
-.ai-msg{max-width:90%;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;word-break:break-word}
-.ai-msg.user{background:rgba(77,159,255,0.12);align-self:flex-end;border-bottom-right-radius:2px}
-.ai-msg.bot{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);align-self:flex-start;border-bottom-left-radius:2px}
-.ai-msg.system{background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);align-self:center;text-align:center;font-size:11px;color:var(--green);max-width:95%}
-.ai-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 10px}
-.ai-chip{padding:4px 10px;border-radius:12px;font-size:10px;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);color:var(--blue);cursor:pointer;transition:.2s;white-space:nowrap}
-.ai-chip:hover{background:rgba(77,159,255,0.15);transform:translateY(-1px)}
-.ai-input-bar{padding:12px 14px;border-top:1px solid var(--glass-border);display:flex;gap:8px;align-items:center;background:rgba(0,0,0,0.2)}
-.ai-input-bar input{flex:1;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:8px;color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:.2s}
-.ai-input-bar input:focus{border-color:var(--blue);box-shadow:0 0 10px rgba(77,159,255,0.2)}
-.ai-send{padding:10px 12px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap}
-.ai-send:hover{box-shadow:0 2px 12px rgba(77,159,255,0.4)}
-.ai-send svg{width:12px;height:12px;fill:#fff}
-@media(max-width:600px){.ai-console{width:calc(100vw - 24px);right:12px;bottom:12px;height:calc(100vh - 100px)}}
-
-/* Theme colors */
-body.theme-red{--blue:#ef4444;--purple:#f97316;--gradient:linear-gradient(135deg,#ef4444,#f97316);--glow:0 0 20px rgba(239,68,68,0.3)}
-body.theme-green{--blue:#22c55e;--purple:#10b981;--gradient:linear-gradient(135deg,#22c55e,#10b981);--glow:0 0 20px rgba(34,197,94,0.3)}
-body.theme-pink{--blue:#ec4899;--purple:#f43f5e;--gradient:linear-gradient(135deg,#ec4899,#f43f5e);--glow:0 0 20px rgba(236,72,153,0.3)}
-body.theme-orange{--blue:#f97316;--purple:#eab308;--gradient:linear-gradient(135deg,#f97316,#eab308);--glow:0 0 20px rgba(249,115,22,0.3)}
-body.theme-cyan{--blue:#06b6d4;--purple:#3b82f6;--gradient:linear-gradient(135deg,#06b6d4,#3b82f6);--glow:0 0 20px rgba(6,182,212,0.3)}
-body.light-mode{--bg:#f3f4f6;--sidebar:#ffffff;--panel:#ffffff;--glass:rgba(255,255,255,0.7);--glass-border:rgba(0,0,0,0.08);--text:#0f172a;--dim:#64748b}
-body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(77,159,255,0.04) 1px,transparent 1px)}
-/* Apple ripple effect */
-.ripple{position:absolute;border-radius:50%;background:rgba(77,159,255,0.3);transform:scale(0);animation:rippleAnim .5s ease-out forwards;pointer-events:none}
-@keyframes rippleAnim{to{transform:scale(2.5);opacity:0}}
-
-/* Sidebar tooltip */
-.sb-tooltip{position:absolute;left:58px;top:50%;transform:translateY(-50%) translateX(-4px);background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;white-space:nowrap;opacity:0;pointer-events:none;transition:all .2s;z-index:100;color:var(--blue)}
-.sb-item:hover .sb-tooltip{opacity:1;transform:translateY(-50%) translateX(0)}
-
-/* Login chain scroll */
-.chain-scroll{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;border-radius:16px;z-index:0}
-.chain-line{position:absolute;width:1px;background:linear-gradient(to bottom,transparent,var(--blue),transparent);height:60px;opacity:0.3;animation:chainFall linear infinite}
-@keyframes chainFall{0%{top:-60px}100%{top:calc(100% + 60px)}}
-
-/* Login starfield */
-.login-stars{position:absolute;inset:0;border-radius:16px;overflow:hidden;pointer-events:none;z-index:0}
-.star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:starTwinkle 2s ease-in-out infinite alternate}
-@keyframes starTwinkle{0%{opacity:0.1;transform:scale(0.5)}100%{opacity:0.8;transform:scale(1.2)}}
-
-/* Login card inner content needs z-index */
-.login-hd,.fg,.login-btn,.social-row,.login-err{position:relative;z-index:1}
-
-/* Dark globe */
-.globe-wrap{width:100%;display:flex;justify-content:center;padding:10px 0}
-.globe-wrap canvas{border-radius:50%;box-shadow:0 0 30px rgba(77,159,255,0.2),inset 0 0 20px rgba(0,0,0,0.5)}
-
-/* Globe Pet */
-.globe-pet{position:fixed;bottom:20px;right:20px;z-index:9997;cursor:pointer;transition:transform .3s}
-.globe-pet:hover{transform:scale(1.1) translateY(-4px)}
-.globe-pet canvas{border-radius:50%;box-shadow:0 0 20px rgba(77,159,255,0.4),0 0 40px rgba(168,85,247,0.2)}
-.pet-bubble{position:absolute;bottom:60px;right:0;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;font-size:11px;max-width:200px;line-height:1.4;opacity:0;transform:translateY(8px) scale(0.9);transition:all .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
-.pet-bubble.show{opacity:1;transform:translateY(0) scale(1)}
-.pet-bubble::after{content:'';position:absolute;bottom:-6px;right:20px;width:12px;height:12px;background:var(--glass);border:1px solid var(--glass-border);border-top:none;border-left:none;transform:rotate(45deg)}
-
-/* API card style */
-.api-card{background:linear-gradient(135deg,rgba(77,159,255,0.08),rgba(168,85,247,0.08));border:1px solid rgba(77,159,255,0.2);border-radius:var(--radius);padding:16px;cursor:pointer;transition:.2s}
-.api-card:hover{border-color:rgba(77,159,255,0.4);box-shadow:var(--glow);transform:translateY(-2px)}
-</style></head><body>
-<canvas id="bg-canvas"></canvas><div class="grid-bg"></div>
-<div class="lang-sw"><button class="on" onclick="setLang('zh')">中文</button><button onclick="setLang('en')">EN</button></div>
-
-<!-- LOGIN -->
-<div class="page active" id="pg-login">
-<div class="login-card">
-<div class="login-stars" id="login-stars"></div>
-<div class="chain-scroll" id="chain-scroll"></div>
-<div class="login-hd"><h1>RelayOS</h1><p id="t-tag">智能 AI 路由平台<br>中继一切，连接每个模型</p></div>
-<div class="fg"><label id="t-el">邮箱</label><input id="in-email" placeholder="your@email.com"></div>
-<div class="fg"><label id="t-pl">密码</label><input id="in-pass" type="password" placeholder="输入密码"></div>
-<div class="login-err" id="login-err"></div>
-<button class="login-btn" id="t-lbtn" onclick="doLogin()">登 录</button>
-<div class="social-row"><p id="t-social">或通过以下方式登录</p><div class="icons">
-<div class="si" onclick="quickLogin('GitHub')"><svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>
-<div class="si" onclick="quickLogin('Google')"><svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></div>
-<div class="si" onclick="quickLogin('SSO')"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.4 9.36-7 10.5-3.6-1.14-7-5.67-7-10.5V6.3l7-3.12z"/></svg></div>
-</div></div></div></div>
-
-<!-- APP -->
-<div class="page" id="pg-app">
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh;background:#0a0a0f;color:#e0e0e0}
+#loginPage,#appPage{position:absolute;inset:0;transition:opacity .5s}
+#appPage{opacity:0;pointer-events:none}
+#loginPage{display:flex;align-items:center;justify-content:center;flex-direction:column}
+#starfield,#chainScroll,#particleBg{position:fixed;inset:0;pointer-events:none;z-index:0}
+#particleBg{z-index:-1}
+.login-box{position:relative;z-index:2;background:rgba(20,20,30,.85);border:1px solid rgba(100,100,255,.3);border-radius:16px;padding:48px;text-align:center;backdrop-filter:blur(10px)}
+.login-box h1{font-size:28px;margin-bottom:8px;background:linear-gradient(90deg,#6cf,#c6f);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-box p{color:#888;margin-bottom:24px}
+.login-box input{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:14px}
+.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#4a9eff,#6c5ce7);color:#fff;font-size:16px;cursor:pointer;transition:transform .2s}
+.login-box button:hover{transform:scale(1.03)}
+.lang-switch{position:fixed;top:16px;right:16px;z-index:9999;background:rgba(30,30,50,.8);border:1px solid #444;border-radius:8px;padding:6px 14px;color:#ccc;cursor:pointer;font-size:13px}
+.lang-switch:hover{background:rgba(60,60,80,.9)}
+.app-container{display:flex;height:100vh;background:#0d0d14}
+.sidebar{width:64px;background:#0a0a12;border-right:1px solid #1a1a2a;display:flex;flex-direction:column;align-items:center;padding-top:16px;gap:4px;position:relative;z-index:10}
+.sidebar-item{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;cursor:pointer;position:relative;font-size:20px;transition:background .2s;color:#888;overflow:hidden}
+.sidebar-item:hover{background:rgba(100,100,255,.15);color:#fff}
+.sidebar-item.active{background:rgba(100,100,255,.25);color:#fff}
+.sidebar-item .tooltip{position:absolute;left:56px;background:#222;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
+.sidebar-item:hover .tooltip{opacity:1}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);transform:scale(0);animation:rippleAnim .6s linear}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+.main-content{flex:1;overflow-y:auto;padding:24px;position:relative}
+.page{display:none}.page.active{display:block}
+.globe-container{width:200px;height:200px;margin:0 auto 24px}
+.globe-container canvas{width:100%;height:100%;border-radius:50%}
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.stat-card{flex:1;min-width:120px;background:rgba(20,20,40,.8);border:1px solid #222;border-radius:12px;padding:16px;text-align:center}
+.stat-card h3{font-size:24px;color:#6cf}
+.stat-card p{font-size:12px;color:#888}
+.quick-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.quick-card{background:rgba(25,25,45,.9);border:1px solid #2a2a4a;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:transform .2s,border-color .2s}
+.quick-card:hover{transform:translateY(-4px);border-color:#4a9eff}
+.quick-card .icon{font-size:28px;margin-bottom:8px}
+.chat-layout{display:flex;height:calc(100vh - 100px);gap:12px}
+.chat-list{width:240px;background:rgba(15,15,25,.9);border-radius:12px;padding:12px;overflow-y:auto}
+.chat-item{padding:10px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .2s}
+.chat-item:hover,.chat-item.active{background:rgba(100,100,255,.15)}
+.chat-item h4{font-size:13px;color:#ddd}.chat-item p{font-size:11px;color:#666;margin-top:2px}
+.chat-area{flex:1;display:flex;flex-direction:column;background:rgba(15,15,25,.9);border-radius:12px;padding:16px}
+.messages{flex:1;overflow-y:auto;margin-bottom:12px}
+.message{margin-bottom:12px;padding:10px 14px;border-radius:10px;max-width:70%;font-size:14px}
+.message.user{background:rgba(74,158,255,.2);margin-left:auto}
+.message.bot{background:rgba(40,40,60,.8)}
+.chat-input-row{display:flex;gap:8px}
+.chat-input-row input{flex:1;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a2e;color:#fff}
+.chat-input-row button{padding:10px 20px;border:none;border-radius:8px;background:#4a9eff;color:#fff;cursor:pointer}
+.page-header{font-size:22px;margin-bottom:16px;color:#fff}
+.page-desc{color:#888;margin-bottom:20px}
+.content-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.content-card{background:rgba(20,20,40,.8);border:1px solid #2a2a4a;border-radius:12px;padding:16px}
+.pet-globe{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;cursor:pointer;z-index:1000;box-shadow:0 0 20px rgba(100,100,255,.3);transition:transform .3s}
+.pet-globe:hover{transform:scale(1.1)}
+.pet-globe canvas{width:100%;height:100%;border-radius:50%}
+.pet-msg{position:fixed;bottom:84px;right:20px;background:rgba(20,20,40,.95);border:1px solid #4a9eff;border-radius:10px;padding:8px 14px;font-size:12px;color:#ccc;z-index:1000;max-width:180px;opacity:0;transition:opacity .3s;pointer-events:none}
+.pet-msg.show{opacity:1}
+.ai-console{position:fixed;bottom:90px;right:20px;width:320px;background:rgba(12,12,22,.97);border:1px solid #333;border-radius:14px;padding:16px;z-index:1001;display:none;backdrop-filter:blur(12px)}
+.ai-console h3{font-size:14px;margin-bottom:10px;color:#6cf}
+.ai-console input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:13px}
+.ai-console .hint{font-size:11px;color:#666;margin-top:8px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,40,.95);border:1px solid #4a9eff;border-radius:10px;padding:10px 24px;color:#fff;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.confetti-piece{position:fixed;width:8px;height:8px;z-index:9998;border-radius:2px;animation:confettiFall 3s forwards}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+body.light{background:#f5f5fa;color:#222}
+body.light .app-container{background:#f0f0f8}
+body.light .sidebar{background:#e8e8f0;border-color:#ddd}
+body.light .sidebar-item{color:#555}
+body.light .sidebar-item:hover{background:rgba(100,100,200,.1);color:#222}
+body.light .stat-card,body.light .content-card,body.light .chat-area,body.light .chat-list{background:rgba(255,255,255,.9);border-color:#ddd}
+body.light .quick-card{background:#fff;border-color:#ddd;color:#222}
+body.light .login-box{background:rgba(255,255,255,.9);border-color:#ccc}
+body.light .login-box input{background:#f0f0f5;border-color:#ccc;color:#222}
+body.light .message.bot{background:rgba(230,230,245,.9)}
+body.light .ai-console{background:rgba(245,245,255,.97);border-color:#ccc}
+body.light .pet-msg{background:rgba(255,255,255,.95);border-color:#4a9eff}
+body.light .page-header{color:#222}
+body.light .toast{background:rgba(255,255,255,.95);color:#222;border-color:#4a9eff}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<canvas id="chainScroll"></canvas>
+<canvas id="particleBg"></canvas>
+<div class="lang-switch" onclick="toggleLang()">&#20013;&#25991;/EN</div>
+<div id="loginPage">
+<div class="login-box">
+<h1>RelayOS</h1>
+<p id="loginSubtitle">Next-Gen AI Operating System</p>
+<input type="text" placeholder="Username">
+<input type="password" placeholder="Password">
+<button onclick="doLogin()" id="loginBtn">Login</button>
+</div>
+</div>
+<div id="appPage">
+<div class="app-container">
 <div class="sidebar" id="sidebar"></div>
-<div class="main-area">
-<div class="top-bar"><h2 id="top-title">首页</h2><div class="top-right"><span id="t-welc" style="font-size:11px;color:var(--dim)">欢迎回来</span><div class="avatar">U</div></div></div>
-<div class="tab-body on" id="tab-home"></div>
-<div class="tab-body" id="tab-chat"></div>
-<div class="tab-body" id="tab-community"></div>
-<div class="tab-body" id="tab-image"></div>
-<div class="tab-body" id="tab-video"></div>
-<div class="tab-body" id="tab-resource"></div>
-<div class="tab-body" id="tab-memory"></div>
-<div class="tab-body" id="tab-tasks"></div>
-<div class="tab-body" id="tab-settings"></div>
-</div></div>
+<div class="main-content" id="mainContent"></div>
+</div>
+</div>
+<div class="pet-globe" id="petGlobe" onclick="toggleConsole()"><canvas id="petCanvas" width="56" height="56"></canvas></div>
+<div class="pet-msg" id="petMsg"></div>
+<div class="ai-console" id="aiConsole">
+<h3 id="consoleTitle">AI Console</h3>
+<input id="consoleInput" onkeydown="if(event.key==='Enter')runCommand()">
+<div class="hint" id="consoleHint">Try: theme red, dark mode, light mode, confetti</div>
+</div>
 <div class="toast" id="toast"></div>
 
-<!-- Globe Pet -->
-<div class="globe-pet" id="globe-pet" onclick="toggleAiConsole()">
-<canvas id="pet-globe" width="50" height="50"></canvas>
-<div class="pet-bubble" id="pet-bubble"></div>
-</div>
-
-<!-- AI Console Panel -->
-<div class="ai-console" id="ai-console">
-<div class="ai-hd">
-<div class="ai-hd-left">
-<div class="ai-hd-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-<div>
-<div class="ai-hd-title" id="ai-title">AI 控制台</div>
-<div class="ai-hd-status" id="ai-status">在线</div>
-</div>
-</div>
-<button class="ai-close" onclick="toggleAiConsole()">×</button>
-</div>
-<div class="ai-body" id="ai-body"></div>
-<div class="ai-suggest" id="ai-suggest"></div>
-<div class="ai-input-bar">
-<input id="ai-input" placeholder="输入自然语言指令..." onkeydown="if(event.key==='Enter')sendAi()">
-<button class="ai-send" onclick="sendAi()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg><span id="ai-send-text">发送</span></button>
-</div>
-</div>
 <script>
-// === I18N ===
-const L={
-zh:{tag:'智能 AI 路由平台<br>中继一切，连接每个模型',el:'邮箱',pl:'密码',pp:'输入密码',lb:'登 录',social:'或通过以下方式登录',welc:'欢迎回来',err:'请输入邮箱和密码',
-home:'首页',chat:'对话',community:'社区',image:'AI 绘画',video:'AI 视频',resource:'知识库',memory:'记忆',tasks:'任务',settings:'设置',
-homeDesc:'开始新对话或选择已有助手',recentChat:'最近对话',quickStart:'快速开始',agents:'智能体市场',models:'模型管理',plugins:'插件中心',
-chatPh:'输入消息...',send:'发送',
-imgTitle:'AI 图像生成',imgDesc:'输入描述，生成精美图像',vidTitle:'AI 视频生成',vidDesc:'文字描述生成视频内容',
-resTitle:'知识库管理',resDesc:'管理文件、文档和数据源',memTitle:'记忆系统',memDesc:'AI 的长期记忆与偏好学习',
-taskTitle:'任务管理',taskDesc:'管理 AI 代理执行的任务',
-setGeneral:'通用设置',setProvider:'模型服务商',setAppear:'外观主题',
-comTitle:'社区发现',comDesc:'发现优秀的智能体、模型和插件',
-statNodes:'活跃节点',statModels:'在线模型',statLatency:'平均延迟',statRate:'成功率'},
-en:{tag:'Intelligent AI Routing Platform<br>Relay Everything, Connect Every Model',el:'EMAIL',pl:'PASSWORD',pp:'Enter password',lb:'Sign In',social:'Or continue with',welc:'Welcome back',err:'Email and password required',
-home:'Home',chat:'Chat',community:'Community',image:'Image Gen',video:'Video Gen',resource:'Knowledge',memory:'Memory',tasks:'Tasks',settings:'Settings',
-homeDesc:'Start a new conversation or pick an agent',recentChat:'Recent Chats',quickStart:'Quick Start',agents:'Agent Market',models:'Model Hub',plugins:'Plugins',
-chatPh:'Type a message...',send:'Send',
-imgTitle:'AI Image Generation',imgDesc:'Describe and generate beautiful images',vidTitle:'AI Video Generation',vidDesc:'Text-to-video generation',
-resTitle:'Knowledge Base',resDesc:'Manage files, documents and data sources',memTitle:'Memory System',memDesc:'Long-term AI memory and preference learning',
-taskTitle:'Task Management',taskDesc:'Manage AI agent tasks',
-setGeneral:'General',setProvider:'Providers',setAppear:'Appearance',
-comTitle:'Community Discover',comDesc:'Find great agents, models and plugins',
-statNodes:'Active Nodes',statModels:'Online Models',statLatency:'Avg Latency',statRate:'Success Rate'}
+var lang='en',currentPage='home',consoleOpen=false,themeColor='#4a9eff',petInterval=null;
+var labels={
+en:{home:'Home',chat:'Chat',community:'Community',image:'Image',video:'Video',resource:'Resource',memory:'Memory',tasks:'Tasks',settings:'Settings',subtitle:'Next-Gen AI Operating System',login:'Login',consoleTitle:'AI Console',consoleHint:'Try: theme red, dark mode, light mode, confetti'},
+zh:{home:'\u9996\u9875',chat:'\u804a\u5929',community:'\u793e\u533a',image:'\u56fe\u7247',video:'\u89c6\u9891',resource:'\u8d44\u6e90',memory:'\u8bb0\u5fc6',tasks:'\u4efb\u52a1',settings:'\u8bbe\u7f6e',subtitle:'\u65b0\u4e00\u4ee3 AI \u64cd\u4f5c\u7cfb\u7edf',login:'\u767b\u5f55',consoleTitle:'AI \u63a7\u5236\u53f0',consoleHint:'\u8bd5\u8bd5: theme red, dark mode, light mode, confetti'}
 };
-let lang='zh';function t(k){return L[lang][k]||k}
-function setLang(l){lang=l;document.querySelectorAll('.lang-sw button').forEach(b=>b.classList.toggle('on',b.textContent.trim()===(l==='zh'?'中文':'EN')));applyLang();if(curTab)render(curTab)}
-function applyLang(){
-const s=id=>document.getElementById(id);
-if(s('t-tag'))s('t-tag').innerHTML=t('tag');
-if(s('t-el'))s('t-el').textContent=t('el');
-if(s('t-pl'))s('t-pl').textContent=t('pl');
-if(s('in-pass'))s('in-pass').placeholder=t('pp');
-if(s('t-lbtn'))s('t-lbtn').textContent=t('lb');
-if(s('t-social'))s('t-social').textContent=t('social');
-if(s('t-welc'))s('t-welc').textContent=t('welc');
-}
+var icons=['\u{1F3E0}','\u{1F4AC}','\u{1F310}','\u{1F4F7}','\u{1F3AC}','\u{1F4C2}','\u{1F9E0}','\u2611','\u2699'];
+var pageKeys=['home','chat','community','image','video','resource','memory','tasks','settings'];
+var petMsgsData={en:['System nominal.','All agents online.','Memory synced.','Tasks running smoothly.','Creativity max!'],zh:['\u7cfb\u7edf\u6b63\u5e38','\u4ee3\u7406\u5728\u7ebf','\u8bb0\u5fc6\u5df2\u540c\u6b65','\u4efb\u52a1\u987a\u5229','\u521b\u9020\u529b\u6ee1\u683c!']};
 
-// === NAV ===
-const tabs=[
-{id:'home',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>'},
-{id:'chat',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>'},
-{id:'community',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>'},
-{id:'image',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'},
-{id:'video',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>'},
-{id:'resource',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>'},
-{id:'memory',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-3.5l6-4.5-6-4.5v9z"/></svg>'},
-{id:'tasks',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>'},
-{id:'settings',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>'}
-];
-let curTab='home';
-function buildSidebar(){
-const sb=document.getElementById('sidebar');
-const tabLabels={home:lang==='zh'?'首页':'Home',chat:lang==='zh'?'对话':'Chat',community:lang==='zh'?'社区':'Community',image:lang==='zh'?'绘画':'Image',video:lang==='zh'?'视频':'Video',resource:lang==='zh'?'知识库':'Files',memory:lang==='zh'?'记忆':'Memory',tasks:lang==='zh'?'任务':'Tasks',settings:lang==='zh'?'设置':'Settings'};
-sb.innerHTML='<div class="sb-logo">R</div>'+tabs.map(t=>`<div class="sb-item${t.id===curTab?' on':''}" data-tab="${t.id}" onclick="sidebarClick(event,this,'${t.id}')">${t.icon}<span class="sb-tooltip">${tabLabels[t.id]||t.id}</span></div>`).join('')+'<div class="sb-sep"></div><div class="sb-item out" onclick="sidebarClick(event,this,\'logout\')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span class="sb-tooltip">${lang==='zh'?'退出':'Logout'}</span></div>';
-}
-function sidebarClick(e,el,tab){
-const r=document.createElement('div');r.className='ripple';
-const rect=el.getBoundingClientRect();const size=Math.max(rect.width,rect.height);
-r.style.width=r.style.height=size+'px';r.style.left=(e.clientX-rect.left-size/2)+'px';r.style.top=(e.clientY-rect.top-size/2)+'px';
-el.appendChild(r);setTimeout(()=>r.remove(),500);
-if(tab==='logout')logout();else go(tab);
-}
-function go(tab){
-curTab=tab;
-document.querySelectorAll('.sb-item[data-tab]').forEach(el=>el.classList.toggle('on',el.dataset.tab===tab));
-document.querySelectorAll('.tab-body').forEach(el=>el.classList.toggle('on',el.id==='tab-'+tab));
-document.getElementById('top-title').textContent=t(tab);
-render(tab);
-}
-// === RENDER PAGES ===
-function render(tab){
-const el=document.getElementById('tab-'+tab);
-switch(tab){
-case 'home':el.innerHTML=`
-<div class="globe-wrap"><canvas id="home-globe" width="180" height="180"></canvas></div>
-<div class="stats-row">
-<div class="stat"><div class="stat-label">${t('statNodes')}</div><div class="stat-val">128</div></div>
-<div class="stat"><div class="stat-label">${t('statModels')}</div><div class="stat-val">42</div></div>
-<div class="stat"><div class="stat-label">${t('statLatency')}</div><div class="stat-val">187ms</div></div>
-<div class="stat"><div class="stat-label">${t('statRate')}</div><div class="stat-val">99.7%</div></div>
-</div>
-<div class="card"><div class="card-title">${t('quickStart')}</div><div class="card-desc">${t('homeDesc')}</div>
-<div class="card-row" style="margin-top:12px">
-<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('chat')"><div style="font-size:24px;margin-bottom:6px">💬</div><div class="card-title">${t('chat')}</div></div>
-<div class="api-card" style="flex:1;text-align:center" onclick="toast('API Console')"><div style="font-size:24px;margin-bottom:6px">⚡</div><div class="card-title">API</div><div class="card-desc">${lang==='zh'?'路由控制台':'Routing Console'}</div></div>
-<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('community')"><div style="font-size:24px;margin-bottom:6px">🌐</div><div class="card-title">${t('agents')}</div></div>
-<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('image')"><div style="font-size:24px;margin-bottom:6px">🎨</div><div class="card-title">${t('image')}</div></div>
-<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('video')"><div style="font-size:24px;margin-bottom:6px">🎬</div><div class="card-title">${t('video')}</div></div>
-</div></div>
-<div class="card"><div class="card-title">${t('recentChat')}</div>
-<div style="margin-top:10px">
-${['GPT-4o: 帮我优化这段代码...','Claude: 分析这篇论文的核心观点...','DeepSeek: 生成一个 REST API...','Gemini: 翻译这段技术文档...'].map((m,i)=>`<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;cursor:pointer" onclick="go('chat')">${m}</div>`).join('')}
-</div></div>`;setTimeout(initHomeGlobe,50);break;
-
-case 'chat':el.innerHTML=`<div class="chat-wrap">
-<div class="chat-list">
-<div style="padding:8px;font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">${t('recentChat')}</div>
-${[{n:'GPT-4o 助手',m:'帮我优化这段代码的性能'},{n:'Claude 写作',m:'分析这篇论文的核心观点'},{n:'DeepSeek Coder',m:'生成一个 REST API 框架'},{n:'翻译助手',m:'翻译技术文档为中文'},{n:'Gemini Pro',m:'对比三种数据库方案'}].map((c,i)=>`<div class="chat-item${i===0?' on':''}" onclick="selectChat(this,'${c.n}')"><div class="ci-name">${c.n}</div><div class="ci-msg">${c.m}</div></div>`).join('')}
-</div>
-<div class="chat-main">
-<div class="chat-msgs" id="chat-msgs">
-<div class="msg ai">你好！我是 GPT-4o 助手，有什么可以帮你的？</div>
-<div class="msg user">帮我优化一段 JavaScript 代码的性能</div>
-<div class="msg ai">好的，请把代码发给我，我来帮你分析瓶颈并给出优化建议。</div>
-</div>
-<div class="chat-input-bar"><input id="chat-in" placeholder="${t('chatPh')}" onkeydown="if(event.key==='Enter')sendMsg()"><button class="send-btn" onclick="sendMsg()">${t('send')}</button></div>
-</div></div>`;break;
-
-case 'community':el.innerHTML=`
-<div class="card"><div class="card-title">${t('comTitle')}</div><div class="card-desc">${t('comDesc')}</div></div>
-<div class="card-grid">
-${[{n:'代码专家',d:'全栈编程助手',t:'Code'},{n:'翻译大师',d:'多语言翻译专家',t:'Language'},{n:'写作教练',d:'创意写作指导',t:'Writing'},{n:'数据分析师',d:'数据可视化与分析',t:'Data'},{n:'UI 设计师',d:'界面设计建议',t:'Design'},{n:'学术助手',d:'论文写作辅助',t:'Academic'},{n:'法律顾问',d:'法律文书辅助',t:'Legal'},{n:'营销策划',d:'营销文案生成',t:'Marketing'}].map(a=>`
-<div class="card" style="cursor:pointer" onclick="toast('${a.n}')">
-<div class="card-title">${a.n}</div><div class="card-desc">${a.d}</div>
-<div style="margin-top:8px"><span class="tag">${a.t}</span></div>
-</div>`).join('')}</div>`;break;
-
-case 'image':el.innerHTML=`
-<div class="card"><div class="card-title">${t('imgTitle')}</div><div class="card-desc">${t('imgDesc')}</div>
-<div style="display:flex;gap:8px;margin-top:12px"><input style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);font-size:13px;outline:none" placeholder="${lang==='zh'?'描述你想生成的图像...':'Describe the image...'}" id="img-prompt"><button class="send-btn" onclick="genImage()">Generate</button></div></div>
-<div class="img-grid">
-${['🌄','🏔️','🌊','🌃','🎆','🌌','🏙️','🌅','🎨','🖼️','🌈','✨'].map(e=>`<div class="img-card" onclick="toast('Image generated!')">${e}</div>`).join('')}
-</div>`;break;
-
-case 'video':el.innerHTML=`
-<div class="card"><div class="card-title">${t('vidTitle')}</div><div class="card-desc">${t('vidDesc')}</div>
-<div style="display:flex;gap:8px;margin-top:12px"><input style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);font-size:13px;outline:none" placeholder="${lang==='zh'?'描述视频内容...':'Describe video content...'}"><button class="send-btn" onclick="toast('Video generating...')">Generate</button></div></div>
-<div class="card-grid">
-${[{n:'Seedance 1.0',d:'High quality dance generation'},{n:'Kling AI',d:'Cinematic video creation'},{n:'Sora',d:'Text to realistic video'},{n:'Runway Gen-3',d:'Creative video tools'}].map(v=>`<div class="card" style="cursor:pointer" onclick="toast('${v.n} selected')"><div style="font-size:28px;margin-bottom:8px">🎬</div><div class="card-title">${v.n}</div><div class="card-desc">${v.d}</div></div>`).join('')}
-</div>`;break;
-
-case 'resource':el.innerHTML=`
-<div class="card"><div class="card-title">${t('resTitle')}</div><div class="card-desc">${t('resDesc')}</div>
-<button class="send-btn" style="margin-top:12px" onclick="toast('Upload dialog')">${lang==='zh'?'上传文件':'Upload File'}</button></div>
-<div class="card-grid">
-${[{n:'API 文档.pdf',s:'2.4 MB',t:'PDF'},{n:'技术规范.md',s:'156 KB',t:'Markdown'},{n:'数据集.csv',s:'12.8 MB',t:'CSV'},{n:'研究论文.pdf',s:'4.1 MB',t:'PDF'},{n:'代码库索引',s:'890 KB',t:'Index'},{n:'会议记录.txt',s:'67 KB',t:'Text'}].map(f=>`<div class="card" style="cursor:pointer" onclick="toast('${f.n}')"><div class="card-title">${f.n}</div><div class="card-desc">${f.s}</div><div style="margin-top:6px"><span class="tag">${f.t}</span></div></div>`).join('')}
-</div>`;break;
-
-case 'memory':el.innerHTML=`
-<div class="card"><div class="card-title">${t('memTitle')}</div><div class="card-desc">${t('memDesc')}</div></div>
-<div class="mem-grid">
-${[{n:'用户偏好',d:'编程语言: TypeScript, Python | 框架: React, Next.js',icon:'⚙️'},{n:'对话上下文',d:'记住了 47 个关键上下文片段',icon:'🧠'},{n:'身份信息',d:'全栈开发者 | 关注 AI 和 Web 技术',icon:'👤'},{n:'学习经验',d:'从 128 次交互中学习了编码风格偏好',icon:'📖'},{n:'项目记忆',d:'跟踪 5 个活跃项目的技术栈和进度',icon:'📂'},{n:'交互统计',d:'总对话: 1,247 | 本周: 89 | 满意度: 96%',icon:'📊'}].map(m=>`<div class="mem-card" onclick="toast('${m.n}')"><div style="font-size:24px;margin-bottom:8px">${m.icon}</div><div class="card-title">${m.n}</div><div class="card-desc">${m.d}</div></div>`).join('')}
-</div>`;break;
-
-case 'tasks':el.innerHTML=`
-<div class="card"><div class="card-title">${t('taskTitle')}</div><div class="card-desc">${t('taskDesc')}</div>
-<button class="send-btn" style="margin-top:12px" onclick="toast('New task')">${lang==='zh'?'+ 新建任务':'+ New Task'}</button></div>
-<div class="card-grid">
-${[{n:'代码审查',s:'进行中',c:'green'},{n:'文档翻译',s:'待处理',c:'purple'},{n:'API 测试',s:'已完成',c:'green'},{n:'性能优化',s:'进行中',c:'green'},{n:'数据迁移',s:'待处理',c:'purple'},{n:'安全扫描',s:'已完成',c:'green'}].map(tk=>`<div class="card" style="cursor:pointer" onclick="toast('${tk.n}')"><div class="card-title">${tk.n}</div><div style="margin-top:6px"><span class="tag ${tk.c}">${tk.s}</span></div></div>`).join('')}
-</div>`;break;
-
-case 'settings':el.innerHTML=`
-<div class="card"><div class="card-title">${t('setGeneral')}</div>
-${[{n:lang==='zh'?'深色模式':'Dark Mode',on:true},{n:lang==='zh'?'通知推送':'Notifications',on:true},{n:lang==='zh'?'自动路由':'Auto Routing',on:true},{n:lang==='zh'?'传输加密':'Encryption',on:true},{n:lang==='zh'?'流式输出':'Streaming',on:true}].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="font-size:13px">${s.n}</span><div style="width:36px;height:20px;border-radius:10px;background:${s.on?'rgba(77,159,255,0.4)':'rgba(255,255,255,0.1)'};cursor:pointer;position:relative" onclick="this.classList.toggle('tg');this.style.background=this.classList.contains('tg')?'rgba(255,255,255,0.1)':'rgba(77,159,255,0.4)'"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:${s.on?'18px':'2px'};transition:.2s"></div></div></div>`).join('')}
-</div>
-<div class="card"><div class="card-title">${t('setProvider')}</div>
-<div class="card-grid" style="margin-top:12px">
-${['OpenAI','Anthropic','Google','DeepSeek','Mistral','Meta'].map(p=>`<div class="card" style="text-align:center;cursor:pointer" onclick="toast('${p} config')"><div class="card-title">${p}</div><div style="margin-top:4px"><span class="tag green">Active</span></div></div>`).join('')}
-</div></div>`;break;
-}}
-
-// === ACTIONS ===
-function doLogin(){
-enterApp();
-}
-function quickLogin(p){enterApp();toast(p+' login')}
+function doLogin(){enterApp();}
 function enterApp(){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById('pg-app').classList.add('active');
-buildSidebar();go('home');
+  document.getElementById('loginPage').style.opacity='0';
+  document.getElementById('loginPage').style.pointerEvents='none';
+  document.getElementById('appPage').style.opacity='1';
+  document.getElementById('appPage').style.pointerEvents='all';
+  buildSidebar();buildPages();setPage('home');startParticles();startPetMessages();
 }
-function logout(){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById('pg-login').classList.add('active');
+function toggleLang(){lang=(lang==='en')?'zh':'en';setLang();}
+function setLang(){
+  var L=labels[lang];
+  document.getElementById('loginSubtitle').textContent=L.subtitle;
+  document.getElementById('loginBtn').textContent=L.login;
+  document.getElementById('consoleTitle').textContent=L.consoleTitle;
+  document.getElementById('consoleHint').textContent=L.consoleHint;
+  var items=document.querySelectorAll('.sidebar-item');
+  for(var i=0;i<items.length;i++){var k=items[i].getAttribute('data-page');var t=items[i].querySelector('.tooltip');if(t&&k&&L[k])t.textContent=L[k];}
+  for(var j=0;j<pageKeys.length;j++){var h=document.getElementById('hdr-'+pageKeys[j]);if(h)h.textContent=L[pageKeys[j]];}
 }
-function selectChat(el,name){
-document.querySelectorAll('.chat-item').forEach(c=>c.classList.remove('on'));
-el.classList.add('on');
-document.getElementById('chat-msgs').innerHTML=`<div class="msg ai">你好！我是 ${name}，有什么可以帮你的？</div>`;
+function buildSidebar(){
+  var sb=document.getElementById('sidebar'),html='';
+  for(var i=0;i<pageKeys.length;i++){
+    html+='<div class="sidebar-item'+(i===0?' active':'')+'" data-page="'+pageKeys[i]+'" onclick="handleSidebarClick(event)"><span>'+icons[i]+'</span><span class="tooltip">'+labels[lang][pageKeys[i]]+'</span></div>';
+  }
+  sb.innerHTML=html;
 }
-function sendMsg(){
-const input=document.getElementById('chat-in');if(!input||!input.value.trim())return;
-const msgs=document.getElementById('chat-msgs');
-msgs.innerHTML+=`<div class="msg user">${input.value}</div>`;
-const v=input.value;input.value='';
-setTimeout(()=>{msgs.innerHTML+=`<div class="msg ai">收到你的消息："${v}"。让我来处理一下...</div>`;msgs.scrollTop=msgs.scrollHeight},600);
+function handleSidebarClick(e){
+  var item=e.currentTarget,page=item.getAttribute('data-page');
+  var rect=item.getBoundingClientRect();
+  var rip=document.createElement('span');rip.className='ripple';
+  rip.style.left=(e.clientX-rect.left)+'px';rip.style.top=(e.clientY-rect.top)+'px';
+  item.appendChild(rip);setTimeout(function(){rip.remove();},600);
+  setPage(page);
 }
-function genImage(){const p=document.getElementById('img-prompt');toast(lang==='zh'?'正在生成图像...':'Generating image...');if(p)p.value=''}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show';setTimeout(()=>el.className='toast',2200)}
-
-// === PARTICLES ===
-(function(){const c=document.getElementById('bg-canvas'),x=c.getContext('2d');let w,h,ps=[];
-function rs(){w=c.width=innerWidth;h=c.height=innerHeight}addEventListener('resize',rs);rs();
-class P{constructor(){this.r()}r(){this.x=Math.random()*w;this.y=Math.random()*h;this.vx=(Math.random()-.5)*.2;this.vy=(Math.random()-.5)*.2;this.s=Math.random()*1.2+.4;this.a=Math.random()*.3+.05;this.cl=Math.random()>.5?'77,159,255':'168,85,247'}
-u(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w||this.y<0||this.y>h)this.r()}
-d(){x.beginPath();x.arc(this.x,this.y,this.s,0,6.28);x.fillStyle=`rgba(${this.cl},${this.a})`;x.fill()}}
-for(let i=0;i<50;i++)ps.push(new P);
-function loop(){x.clearRect(0,0,w,h);ps.forEach(p=>{p.u();p.d()});
-for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<90){x.beginPath();x.moveTo(ps[i].x,ps[i].y);x.lineTo(ps[j].x,ps[j].y);x.strokeStyle=`rgba(77,159,255,${.04*(1-d/90)})`;x.lineWidth=.4;x.stroke()}}
-requestAnimationFrame(loop)}loop()})();
-
-// Enter key
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('pg-login').classList.contains('active'))doLogin()});
-
-// ==================== AI CONSOLE ====================
-// 自然语言指令解析器 - 通过 AI 控制台修改 UI
-const AI_L={
-zh:{title:'AI 控制台',status:'在线',ph:'输入自然语言指令...',send:'发送',welcome:'👋 你好！我是 RelayOS AI 控制台。\n\n试试这些指令：\n• 切换到英文\n• 主题颜色改成红色\n• 跳转到聊天页\n• 切换到浅色模式\n• 添加一个新卡片\n\n支持中英文自由混合！',
-unknown:'🤔 不太理解这个指令。可以试试：切换主题、跳转页面、切换语言、修改颜色等。',
-execDone:'✓ 已执行：',langSwitched:'已切换到',themeChanged:'主题已更改',nav:'已跳转到',lightOn:'已切换到浅色模式',darkOn:'已切换到深色模式',logoutDone:'已退出登录',cardAdded:'已添加新卡片到当前页面',chatSent:'已在对话中发送消息',confetti:'🎉 彩蛋触发！',reset:'已重置为默认主题',help:'可用指令：\n1. 切换语言: 切换到英文/中文\n2. 修改主题: 主题改成红色/蓝色/绿色/粉色/橙色/青色\n3. 跳转页面: 去首页/对话/社区/绘画/视频/知识库/记忆/任务/设置\n4. 切换模式: 浅色模式/深色模式\n5. 添加卡片: 添加一个新卡片\n6. 发送消息: 在聊天中发送 xxx\n7. 退出登录: 退出/注销\n8. 重置: 重置主题\n9. 彩蛋: 烟花/confetti'},
-en:{title:'AI Console',status:'Online',ph:'Type a natural command...',send:'Send',welcome:'👋 Hi! I am the RelayOS AI Console.\n\nTry these commands:\n• Switch to Chinese\n• Change theme to red\n• Go to chat page\n• Switch to light mode\n• Add a new card\n\nBoth Chinese and English supported!',
-unknown:'🤔 I don\'t understand. Try: switch theme, navigate, change language, etc.',
-execDone:'✓ Done: ',langSwitched:'Switched to',themeChanged:'Theme changed to',nav:'Navigated to',lightOn:'Switched to light mode',darkOn:'Switched to dark mode',logoutDone:'Logged out',cardAdded:'Added new card to current page',chatSent:'Sent message in chat',confetti:'🎉 Easter egg!',reset:'Theme reset to default',help:'Available commands:\n1. Switch language: switch to English/Chinese\n2. Change theme: red/blue/green/pink/orange/cyan\n3. Navigate: go to home/chat/community/image/video/knowledge/memory/tasks/settings\n4. Toggle mode: light/dark mode\n5. Add card: add a new card\n6. Send message: send "xxx" in chat\n7. Logout: logout\n8. Reset: reset theme\n9. Easter egg: confetti/fireworks'}
-};
-function aiT(k){return AI_L[lang][k]||k}
-
-let aiHistory=[];
-
-function toggleAiConsole(){
-const fab=document.getElementById('ai-fab'),panel=document.getElementById('ai-console');
-if(panel.classList.contains('on')){panel.classList.remove('on');fab.classList.remove('hide')}
-else{panel.classList.add('on');fab.classList.add('hide');
-if(aiHistory.length===0){addAiMsg('bot',aiT('welcome'));refreshSuggestions()}
-setTimeout(()=>document.getElementById('ai-input').focus(),100)}
+function setPage(page){
+  currentPage=page;
+  var items=document.querySelectorAll('.sidebar-item');
+  for(var i=0;i<items.length;i++)items[i].classList.toggle('active',items[i].getAttribute('data-page')===page);
+  var pages=document.querySelectorAll('.page');
+  for(var j=0;j<pages.length;j++)pages[j].classList.toggle('active',pages[j].id==='pg-'+page);
+  if(page==='home')drawGlobe();
 }
-
-function updateAiConsoleUI(){
-document.getElementById('ai-title').textContent=aiT('title');
-document.getElementById('ai-status').textContent=aiT('status');
-document.getElementById('ai-input').placeholder=aiT('ph');
-document.getElementById('ai-send-text').textContent=aiT('send');
-refreshSuggestions();
+function buildPages(){
+  var mc=document.getElementById('mainContent');
+  mc.innerHTML=pgHome()+pgChat()+pgGeneric('community','\u{1F310}','Explore communities and connect with creators.',['AI Art Hub','Dev Forum','Music Lab','Writers Circle'])+pgGeneric('image','\u{1F4F7}','Generate and browse AI images.',['Text to Image','Style Transfer','Upscale','Gallery'])+pgGeneric('video','\u{1F3AC}','Create and edit AI videos.',['Text to Video','Video Remix','Storyboard','Templates'])+pgGeneric('resource','\u{1F4C2}','Manage your files and resources.',['Documents','Models','Datasets','Exports'])+pgGeneric('memory','\u{1F9E0}','AI memory and knowledge base.',['Conversations','Learned Facts','Preferences','Context'])+pgGeneric('tasks','\u2611','Track ongoing AI tasks.',['Running','Queued','Completed','Scheduled'])+pgGeneric('settings','\u2699','Configure RelayOS.',['Profile','Appearance','API Keys','Notifications']);
 }
-
-function refreshSuggestions(){
-const sg=document.getElementById('ai-suggest');
-const suggestions=lang==='zh'
-?['主题改成红色','跳转到聊天','切换到英文','浅色模式','添加新卡片','帮助']
-:['Change theme to red','Go to chat','Switch to Chinese','Light mode','Add a card','Help'];
-sg.innerHTML=suggestions.map(s=>`<div class="ai-chip" onclick="document.getElementById('ai-input').value='${s}';sendAi()">${s}</div>`).join('');
+function pgHome(){
+  var L=labels[lang];
+  return '<div class="page active" id="pg-home"><h2 class="page-header" id="hdr-home">'+L.home+'</h2><div class="globe-container"><canvas id="globeCanvas" width="200" height="200"></canvas></div><div class="stats-row"><div class="stat-card"><h3>1.2M</h3><p>Users</p></div><div class="stat-card"><h3>89K</h3><p>Models</p></div><div class="stat-card"><h3>4.7B</h3><p>Tokens</p></div><div class="stat-card"><h3>99.9%</h3><p>Uptime</p></div></div><div class="quick-cards"><div class="quick-card" data-nav="chat" onclick="setPage(this.getAttribute(\'data-nav\'))"><div class="icon">\u{1F4AC}</div><div>Chat</div></div><div class="quick-card"><div class="icon">\u{1F517}</div><div>API</div></div><div class="quick-card" data-nav="community" onclick="setPage(this.getAttribute(\'data-nav\'))"><div class="icon">\u{1F310}</div><div>Community</div></div><div class="quick-card" data-nav="image" onclick="setPage(this.getAttribute(\'data-nav\'))"><div class="icon">\u{1F4F7}</div><div>Image</div></div><div class="quick-card" data-nav="video" onclick="setPage(this.getAttribute(\'data-nav\'))"><div class="icon">\u{1F3AC}</div><div>Video</div></div></div></div>';
 }
-
-function addAiMsg(type,text){
-const body=document.getElementById('ai-body');
-const msg=document.createElement('div');
-msg.className='ai-msg '+type;
-msg.textContent=text;
-body.appendChild(msg);
-body.scrollTop=body.scrollHeight;
-aiHistory.push({type,text});
+function pgChat(){
+  var L=labels[lang];
+  return '<div class="page" id="pg-chat"><h2 class="page-header" id="hdr-chat">'+L.chat+'</h2><div class="chat-layout"><div class="chat-list"><div class="chat-item active"><h4>General Assistant</h4><p>Hello! How can I help?</p></div><div class="chat-item"><h4>Code Helper</h4><p>Ready to debug...</p></div><div class="chat-item"><h4>Creative Writer</h4><p>Let me craft something...</p></div></div><div class="chat-area"><div class="messages" id="chatMessages"><div class="message bot">Hello! I am your RelayOS assistant.</div></div><div class="chat-input-row"><input id="chatInput" placeholder="Type a message..." onkeydown="if(event.key===\'Enter\')sendChat()"><button onclick="sendChat()">Send</button></div></div></div></div>';
 }
-
-function sendAi(){
-const input=document.getElementById('ai-input');
-const cmd=input.value.trim();if(!cmd)return;
-addAiMsg('user',cmd);input.value='';
-setTimeout(()=>processAiCommand(cmd),300);
+function pgGeneric(key,icon,desc,cards){
+  var L=labels[lang];
+  var h='<div class="page" id="pg-'+key+'"><h2 class="page-header" id="hdr-'+key+'">'+L[key]+'</h2><p class="page-desc">'+desc+'</p><div class="content-grid">';
+  for(var i=0;i<cards.length;i++)h+='<div class="content-card"><div style="font-size:24px;margin-bottom:8px">'+icon+'</div><div>'+cards[i]+'</div></div>';
+  return h+'</div></div>';
 }
-
-// 核心：自然语言指令解析与执行
-function processAiCommand(raw){
-const cmd=raw.toLowerCase().trim();
-let executed=false,response='';
-
-// 1. 语言切换
-if(/英文|english|切换.*英|switch.*english|en语言/i.test(cmd)){setLang('en');response=aiT('langSwitched')+' English';executed=true}
-else if(/中文|chinese|切换.*中|switch.*chinese|zh语言/i.test(cmd)){setLang('zh');response=aiT('langSwitched')+' 中文';executed=true}
-
-// 2. 主题颜色
-else if(/红色|red/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-red';response=aiT('themeChanged')+' 🔴';executed=true}
-else if(/绿色|green/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-green';response=aiT('themeChanged')+' 🟢';executed=true}
-else if(/粉|pink/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-pink';response=aiT('themeChanged')+' 🌸';executed=true}
-else if(/橙|orange|yellow|黄/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-orange';response=aiT('themeChanged')+' 🟠';executed=true}
-else if(/青|cyan|蓝绿/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-cyan';response=aiT('themeChanged')+' 🧊';executed=true}
-else if(/蓝|blue|紫|purple|默认|default|重置|reset/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'');response=aiT('reset');executed=true}
-
-// 3. 浅色/深色模式
-else if(/浅色|light.*mode|白色|light|白天/i.test(cmd)){document.body.classList.add('light-mode');response=aiT('lightOn');executed=true}
-else if(/深色|dark.*mode|黑色|dark|暗/i.test(cmd)){document.body.classList.remove('light-mode');response=aiT('darkOn');executed=true}
-
-// 4. 页面导航
-else if(/首页|home/i.test(cmd)){go('home');response=aiT('nav')+' 首页/Home';executed=true}
-else if(/聊天|对话|chat|conversation/i.test(cmd)){go('chat');response=aiT('nav')+' 对话/Chat';executed=true}
-else if(/社区|community|市场|market|发现|discover/i.test(cmd)){go('community');response=aiT('nav')+' 社区/Community';executed=true}
-else if(/视频|video/i.test(cmd)){go('video');response=aiT('nav')+' 视频/Video';executed=true}
-else if(/图像|绘画|image|paint|draw/i.test(cmd)){go('image');response=aiT('nav')+' 绘画/Image';executed=true}
-else if(/知识库|文件|resource|knowledge|file/i.test(cmd)){go('resource');response=aiT('nav')+' 知识库/Resource';executed=true}
-else if(/记忆|memory/i.test(cmd)){go('memory');response=aiT('nav')+' 记忆/Memory';executed=true}
-else if(/任务|task/i.test(cmd)){go('tasks');response=aiT('nav')+' 任务/Tasks';executed=true}
-else if(/设置|setting|config/i.test(cmd)){go('settings');response=aiT('nav')+' 设置/Settings';executed=true}
-
-// 5. 添加卡片
-else if(/添加.*卡|add.*card|新卡片|new card/i.test(cmd)){
-const activeTab=document.querySelector('.tab-body.on');
-if(activeTab){
-const card=document.createElement('div');card.className='card';card.style.animation='fadeUp .4s ease';card.style.borderColor='rgba(77,159,255,0.4)';
-card.innerHTML=`<div class="card-title">✨ ${lang==='zh'?'AI 生成的卡片':'AI-Generated Card'}</div><div class="card-desc">${lang==='zh'?'通过 AI 控制台指令创建于 '+new Date().toLocaleTimeString():'Created via AI console at '+new Date().toLocaleTimeString()}</div><div style="margin-top:8px"><span class="tag purple">AI</span><span class="tag green">New</span></div>`;
-activeTab.appendChild(card);response=aiT('cardAdded');executed=true;}
+function sendChat(){
+  var inp=document.getElementById('chatInput'),val=inp.value.trim();if(!val)return;
+  var m=document.getElementById('chatMessages');
+  var d=document.createElement('div');d.textContent=val;
+  m.innerHTML+='<div class="message user">'+d.innerHTML+'</div>';inp.value='';
+  setTimeout(function(){m.innerHTML+='<div class="message bot">Processing your request...</div>';m.scrollTop=m.scrollHeight;},500);
+  m.scrollTop=m.scrollHeight;
 }
+</script>
 
-// 6. 发送聊天消息
-else if(/发送.*消息|在聊天|send.*message|send.*chat/i.test(cmd)){
-go('chat');
-setTimeout(()=>{
-const match=raw.match(/["'""'](.+?)["'""']/);const msgText=match?match[1]:(lang==='zh'?'来自 AI 控制台的消息':'Hello from AI Console');
-const inp=document.getElementById('chat-in');if(inp){inp.value=msgText;sendMsg();}
-},300);
-response=aiT('chatSent');executed=true;
+
+<script>
+function drawGlobe(){
+  var c=document.getElementById('globeCanvas');if(!c)return;
+  var ctx=c.getContext('2d'),w=200,h=200,cx=100,cy=100,r=80,angle=0;
+  function frame(){
+    ctx.clearRect(0,0,w,h);
+    var g=ctx.createRadialGradient(cx-20,cy-20,10,cx,cy,r);
+    g.addColorStop(0,'#1a2a4a');g.addColorStop(1,'#050510');
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    for(var i=0;i<40;i++){
+      var a=(i*0.37+angle)%(Math.PI*2),b=(i*0.73)%Math.PI-Math.PI/2;
+      var px=cx+Math.cos(b)*Math.cos(a)*r*0.85,py=cy+Math.sin(b)*r*0.85;
+      var depth=Math.cos(b)*Math.sin(a);
+      if(depth>-0.2){ctx.beginPath();ctx.arc(px,py,1.5,0,Math.PI*2);ctx.fillStyle='rgba(100,200,255,'+(0.3+depth*0.7)+')';ctx.fill();}
+    }
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(100,150,255,0.3)';ctx.lineWidth=2;ctx.stroke();
+    angle+=0.01;requestAnimationFrame(frame);
+  }
+  frame();
 }
-
-// 7. 退出登录
-else if(/退出|登出|注销|logout|log.*out|sign.*out/i.test(cmd)){logout();response=aiT('logoutDone');executed=true}
-
-// 8. 彩蛋 - 撒花效果
-else if(/烟花|彩蛋|confetti|firework|celebrate|庆祝|festival/i.test(cmd)){launchConfetti();response=aiT('confetti');executed=true}
-
-// 9. 帮助
-else if(/帮助|help|指令|command|支持|support|能做什么/i.test(cmd)){response=aiT('help');executed=true}
-
-// 10. 模糊问候
-else if(/你好|hi|hello|hey|嗨/i.test(cmd)){response=lang==='zh'?'你好！我能帮你修改 UI 主题、切换语言、跳转页面等。输入"帮助"查看全部指令。':'Hi! I can change UI theme, switch language, navigate pages. Type "help" for all commands.';executed=true}
-
-if(executed){
-if(response.startsWith(aiT('execDone'))||response.includes('\n')||response.startsWith('🎉')||response.startsWith('👋')){addAiMsg('bot',response);}
-else{addAiMsg('system',aiT('execDone')+response);}
-}else{
-addAiMsg('bot',aiT('unknown'));
-}
-refreshSuggestions();
-}
-
-// 彩蛋：撒花
-function launchConfetti(){
-const colors=['#4d9fff','#a855f7','#22d3ee','#22c55e','#f97316','#ec4899'];
-for(let i=0;i<60;i++){
-const p=document.createElement('div');
-p.style.cssText=`position:fixed;top:${Math.random()*20}%;left:${Math.random()*100}%;width:8px;height:8px;background:${colors[i%colors.length]};border-radius:50%;z-index:10000;pointer-events:none;animation:confettiFall ${2+Math.random()*2}s ease-out forwards;transform:rotate(${Math.random()*360}deg)`;
-document.body.appendChild(p);
-setTimeout(()=>p.remove(),4000);
-}
-}
-
-// 在 CSS 中追加 confetti 动画
-(function(){const st=document.createElement('style');
-st.textContent='@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}';
-document.head.appendChild(st);})();
-
-// 初始化 AI 控制台 UI
-setTimeout(updateAiConsoleUI,50);
-// 修改 setLang 以同步更新 AI 控制台
-const _origSetLang=setLang;window.setLang=function(l){_origSetLang(l);updateAiConsoleUI();};
-
-// === CHAIN SCROLL + STARFIELD LOGIN ANIMATION ===
+// Pet Globe
 (function(){
-// Chain lines
-const container=document.getElementById('chain-scroll');if(container){
-for(let i=0;i<15;i++){
-const line=document.createElement('div');line.className='chain-line';
-line.style.left=Math.random()*100+'%';line.style.animationDuration=(2+Math.random()*3)+'s';
-line.style.animationDelay=Math.random()*3+'s';line.style.opacity=0.1+Math.random()*0.25;
-line.style.height=(40+Math.random()*40)+'px';
-container.appendChild(line);
-}}
-// Stars
-const stars=document.getElementById('login-stars');if(stars){
-for(let i=0;i<30;i++){
-const s=document.createElement('div');s.className='star';
-s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
-s.style.animationDelay=Math.random()*3+'s';s.style.animationDuration=(1.5+Math.random()*2)+'s';
-const size=1+Math.random()*2;s.style.width=size+'px';s.style.height=size+'px';
-s.style.background=Math.random()>0.5?'rgba(77,159,255,0.8)':'rgba(168,85,247,0.7)';
-stars.appendChild(s);
-}}
+  var c=document.getElementById('petCanvas');if(!c)return;
+  var ctx=c.getContext('2d'),w=56,h=56,cx=28,cy=28,r=24,angle=0;
+  function frame(){
+    ctx.clearRect(0,0,w,h);
+    var g=ctx.createRadialGradient(cx-6,cy-6,4,cx,cy,r);
+    g.addColorStop(0,'#1a2a4a');g.addColorStop(1,'#050510');
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    for(var i=0;i<20;i++){
+      var a=(i*0.5+angle)%(Math.PI*2),b=(i*0.9)%Math.PI-Math.PI/2;
+      var px=cx+Math.cos(b)*Math.cos(a)*r*0.8,py=cy+Math.sin(b)*r*0.8;
+      var depth=Math.cos(b)*Math.sin(a);
+      if(depth>-0.1){ctx.beginPath();ctx.arc(px,py,1,0,Math.PI*2);ctx.fillStyle='rgba(100,200,255,'+(0.4+depth*0.6)+')';ctx.fill();}
+    }
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(100,150,255,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+    angle+=0.015;requestAnimationFrame(frame);
+  }
+  frame();
 })();
-
-// === HOME GLOBE (dark earth with lights) ===
-function initHomeGlobe(){
-const c=document.getElementById('home-globe');if(!c)return;
-const ctx=c.getContext('2d');const w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-4;
-let rot=0;
-const cities=[];for(let i=0;i<60;i++)cities.push({lat:(Math.random()-0.5)*Math.PI,lng:Math.random()*Math.PI*2,brightness:0.3+Math.random()*0.7});
-function draw(){
-ctx.clearRect(0,0,w,h);
-ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
-const grd=ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);
-grd.addColorStop(0,'#1a1a2e');grd.addColorStop(1,'#050510');
-ctx.fillStyle=grd;ctx.fill();
-ctx.strokeStyle='rgba(77,159,255,0.1)';ctx.lineWidth=1;ctx.stroke();
-// Latitude lines
-for(let i=-2;i<=2;i++){const y=cy+i*r*0.35;const rr=Math.sqrt(r*r-Math.pow(i*r*0.35,2));
-ctx.beginPath();ctx.ellipse(cx,y,rr,rr*0.3,0,0,Math.PI*2);ctx.strokeStyle='rgba(77,159,255,0.05)';ctx.stroke();}
-// City lights
-cities.forEach(city=>{
-const x2=cx+r*0.85*Math.cos(city.lat)*Math.sin(city.lng+rot);
-const y2=cy+r*0.85*Math.sin(city.lat);
-const z=Math.cos(city.lat)*Math.cos(city.lng+rot);
-if(z>-0.2){
-const alpha=city.brightness*(0.4+z*0.6)*(0.8+Math.sin(Date.now()*0.003+city.lng)*0.2);
-ctx.beginPath();ctx.arc(x2,y2,1+city.brightness,0,Math.PI*2);
-ctx.fillStyle=`rgba(77,159,255,${alpha.toFixed(2)})`;ctx.fill();
-ctx.beginPath();ctx.arc(x2,y2,2+city.brightness*2,0,Math.PI*2);
-ctx.fillStyle=`rgba(77,159,255,${(alpha*0.2).toFixed(2)})`;ctx.fill();
-}});
-rot+=0.005;requestAnimationFrame(draw);
-}draw();
+function startPetMessages(){
+  if(petInterval)return;
+  petInterval=setInterval(function(){
+    if(consoleOpen)return;
+    var msgs=petMsgsData[lang],msg=msgs[Math.floor(Math.random()*msgs.length)];
+    var el=document.getElementById('petMsg');el.textContent=msg;el.classList.add('show');
+    setTimeout(function(){el.classList.remove('show');},3000);
+  },8000);
 }
+function toggleConsole(){
+  consoleOpen=!consoleOpen;
+  document.getElementById('aiConsole').style.display=consoleOpen?'block':'none';
+  document.getElementById('petMsg').classList.remove('show');
+  if(consoleOpen)document.getElementById('consoleInput').focus();
+}
+function runCommand(){
+  var inp=document.getElementById('consoleInput'),cmd=inp.value.trim().toLowerCase();inp.value='';if(!cmd)return;
+  var colors={red:'#ff4757',green:'#2ed573',pink:'#ff6b9d',orange:'#ffa502',cyan:'#00d2d3',blue:'#4a9eff'};
+  if(cmd.indexOf('theme')===0){
+    var name=cmd.split(' ')[1]||'';
+    if(colors[name]){themeColor=colors[name];applyThemeColor();showToast('Theme: '+name);}
+    else showToast('Colors: red, green, pink, orange, cyan, blue');
+  }else if(cmd==='dark mode'){document.body.classList.remove('light');showToast('Dark mode on');}
+  else if(cmd==='light mode'){document.body.classList.add('light');showToast('Light mode on');}
+  else if(cmd==='confetti'){fireConfetti();showToast('Confetti!');}
+  else showToast('Unknown: '+cmd);
+}
+function applyThemeColor(){
+  var s=document.querySelectorAll('.stat-card h3');
+  for(var i=0;i<s.length;i++)s[i].style.color=themeColor;
+}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+function fireConfetti(){
+  var cols=['#ff4757','#2ed573','#ffa502','#4a9eff','#ff6b9d','#a55eea'];
+  for(var i=0;i<60;i++){
+    var p=document.createElement('div');p.className='confetti-piece';
+    p.style.left=Math.random()*100+'vw';p.style.top='-10px';
+    p.style.background=cols[Math.floor(Math.random()*cols.length)];
+    p.style.animationDuration=(2+Math.random()*2)+'s';
+    p.style.animationDelay=(Math.random()*0.5)+'s';
+    document.body.appendChild(p);
+    (function(el){setTimeout(function(){el.remove();},4500);})(p);
+  }
+}
+</script>
 
-// === PET GLOBE (small spinning globe) ===
+
+<script>
+// Starfield
 (function(){
-const c=document.getElementById('pet-globe');if(!c)return;
-const ctx=c.getContext('2d');const w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-2;
-let rot=0;
-const dots=[];for(let i=0;i<25;i++)dots.push({lat:(Math.random()-0.5)*Math.PI,lng:Math.random()*Math.PI*2,b:0.4+Math.random()*0.6});
-function draw(){
-ctx.clearRect(0,0,w,h);
-ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
-const grd=ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);
-grd.addColorStop(0,'#1a1a3e');grd.addColorStop(1,'#080818');
-ctx.fillStyle=grd;ctx.fill();
-dots.forEach(d=>{
-const x2=cx+r*0.8*Math.cos(d.lat)*Math.sin(d.lng+rot);
-const y2=cy+r*0.8*Math.sin(d.lat);
-const z=Math.cos(d.lat)*Math.cos(d.lng+rot);
-if(z>0){ctx.beginPath();ctx.arc(x2,y2,1,0,Math.PI*2);ctx.fillStyle=`rgba(77,159,255,${(d.b*z).toFixed(2)})`;ctx.fill();}
-});
-rot+=0.02;requestAnimationFrame(draw);
-}draw();
+  var c=document.getElementById('starfield'),ctx=c.getContext('2d'),stars=[];
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(var i=0;i<120;i++)stars.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+0.5,t:Math.random()*Math.PI*2});
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    for(var i=0;i<stars.length;i++){var s=stars[i];s.t+=0.02;var a=0.4+Math.sin(s.t)*0.4;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='rgba(200,220,255,'+a+')';ctx.fill();}
+    requestAnimationFrame(draw);
+  })();
 })();
-
-// === PET MESSAGES ===
-const petMsgs={
-zh:['主人～今天有什么想聊的吗？🌍','我帮你记住了上次的对话偏好哦~','要不要我帮你优化一下提示词？✨','人家也想被夸一下嘛...🥺','今天的延迟超低哦！全球节点都很健康~','摸摸我的头，我会更聪明的！','主人辛苦啦，要不要休息一下？☕','我发现你最近喜欢用 DeepSeek 呢~','抱抱～我会一直在这里等你的 🌙'],
-en:['Hey! What shall we explore today? 🌍','I remembered your prompt preferences~','Want me to optimize your prompt? ✨','A little praise would make me smarter...🥺','Latency is super low today! All nodes healthy~','Pat my head and I\'ll get smarter!','You\'ve been working hard, take a break? ☕','I noticed you prefer DeepSeek lately~','Hugs~ I\'ll always be here for you 🌙']
-};
-let petTimer=null;
-function showPetBubble(){
-const bubble=document.getElementById('pet-bubble');if(!bubble)return;
-const msgs=petMsgs[lang]||petMsgs.zh;
-bubble.textContent=msgs[Math.floor(Math.random()*msgs.length)];
-bubble.classList.add('show');
-clearTimeout(petTimer);
-petTimer=setTimeout(()=>bubble.classList.remove('show'),4000);
+// Chain Scroll
+(function(){
+  var c=document.getElementById('chainScroll'),ctx=c.getContext('2d'),chains=[];
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  function add(){chains.push({x:Math.random()*c.width,y:-20,sp:1+Math.random()*2,len:30+Math.random()*60});}
+  for(var i=0;i<15;i++){add();chains[i].y=Math.random()*window.innerHeight;}
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    for(var i=chains.length-1;i>=0;i--){
+      var ch=chains[i],g=ctx.createLinearGradient(ch.x,ch.y,ch.x,ch.y+ch.len);
+      g.addColorStop(0,'rgba(60,120,255,0)');g.addColorStop(0.5,'rgba(60,120,255,0.4)');g.addColorStop(1,'rgba(60,120,255,0)');
+      ctx.beginPath();ctx.moveTo(ch.x,ch.y);ctx.lineTo(ch.x,ch.y+ch.len);ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.stroke();
+      ch.y+=ch.sp;if(ch.y>c.height+20){chains.splice(i,1);add();}
+    }
+    requestAnimationFrame(draw);
+  })();
+})();
+// Particles
+function startParticles(){
+  var c=document.getElementById('particleBg'),ctx=c.getContext('2d'),pts=[];
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(var i=0;i<50;i++)pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-0.5)*0.5,vy:(Math.random()-0.5)*0.5,r:Math.random()*2+1});
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    for(var i=0;i<pts.length;i++){
+      var p=pts[i];p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>c.width)p.vx*=-1;if(p.y<0||p.y>c.height)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(80,120,200,0.2)';ctx.fill();
+      for(var j=i+1;j<pts.length;j++){var q=pts[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy);if(d<120){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle='rgba(80,120,200,'+(0.1*(1-d/120))+')';ctx.stroke();}}
+    }
+    requestAnimationFrame(draw);
+  })();
 }
-// Show pet message periodically
-setInterval(()=>{if(document.getElementById('pg-app').classList.contains('active'))showPetBubble()},15000);
-// Show on pet hover
-document.getElementById('globe-pet')?.addEventListener('mouseenter',showPetBubble);
-</script></body></html>
+</script>
+</body>
+</html>
