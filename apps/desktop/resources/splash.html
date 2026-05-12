@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RelayOS</title>
+  <style>
+    .drag-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      -webkit-app-region: drag;
+    }
+
+    body {
+      margin: 0;
+      padding: 48px 0 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1f1f1f;
+      overflow: hidden;
+    }
+
+    /* 添加暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+      body {
+        color: #f5f5f5;
+      }
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    .lobe-brand-loading {
+      width: 120px;
+      height: auto;
+    }
+
+    .lobe-brand-loading path {
+      fill: currentcolor;
+      fill-opacity: 0%;
+      stroke: currentcolor;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      stroke-width: 0.25em;
+
+      animation:
+        draw 2s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+        fill 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes draw {
+      0% {
+        stroke-dashoffset: 1000;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes fill {
+      30% {
+        fill-opacity: 5%;
+      }
+
+      100% {
+        fill-opacity: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="drag-bar"></div>
+  <div class="container">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="120" height="120">
+      <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f8f8fa" />
+          <stop offset="100%" stop-color="#eaeaed" />
+        </linearGradient>
+        <linearGradient id="rGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3a3a3e" />
+          <stop offset="100%" stop-color="#1c1c1f" />
+        </linearGradient>
+      </defs>
+      <rect width="1024" height="1024" rx="224" fill="url(#bgGrad)" />
+      <g transform="translate(512, 512)" fill="url(#rGrad)">
+        <g transform="translate(-200, -160) scale(5)">
+          <rect x="0" y="0" width="14" height="64" rx="3" />
+          <path d="M0 0 L34 0 C50 0 58 8 58 20 C58 32 50 40 34 40 L0 40 Z" />
+          <path d="M30 40 L54 64 L42 64 L22 40 Z" />
+          <rect x="18" y="12" width="24" height="16" rx="2" fill="url(#bgGrad)" />
+        </g>
+        <g transform="translate(40, -200) scale(4.5)">
+          <rect x="0" y="14" width="44" height="10" rx="3" transform="rotate(-45 22 19)" />
+          <path d="M30 0 L46 0 L46 16 L30 0 Z" />
+        </g>
+      </g>
+    </svg>
+  </div>
+</body>
+
+</html>

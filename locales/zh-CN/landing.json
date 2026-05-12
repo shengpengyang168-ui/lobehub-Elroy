@@ -1,0 +1,20 @@
+{
+  "feature.fullChainMonitoring": "全链路监控",
+  "feature.fullChainMonitoring.desc": "完整覆盖整个请求生命周期的可观测性。",
+  "feature.secureRouting": "安全路由",
+  "feature.secureRouting.desc": "企业级加密和安全路由协议。",
+  "feature.smartScheduling": "智能调度",
+  "feature.smartScheduling.desc": "智能负载均衡与自动故障转移。",
+  "feature.stability": "高速稳定",
+  "feature.stability.desc": "高速稳定的 API 中继，99.99% 可用性保证。",
+  "hero.badge": "企业级 AI API 平台",
+  "hero.button": "进入控制台",
+  "hero.description": "中继一切，连接每个模型。",
+  "hero.subtitle": "智能 API 路由平台",
+  "hero.title": "RelayOS",
+  "login.button": "登录",
+  "login.description": "输入您的邮箱地址登录 RelayOS 控制台",
+  "login.placeholder": "your@email.com",
+  "login.submit": "登录",
+  "login.title": "登录 RelayOS"
+}

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8f8fa"/>
+      <stop offset="100%" stop-color="#eaeaed"/>
+    </linearGradient>
+    <linearGradient id="rGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a3a3e"/>
+      <stop offset="100%" stop-color="#1c1c1f"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="12" stdDeviation="24" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bgGrad)" filter="url(#shadow)"/>
+  
+  <!-- R letter + Arrow combined design -->
+  <g transform="translate(512, 512)" fill="url(#rGrad)">
+    <!-- Main R shape -->
+    <g transform="translate(-200, -160) scale(5)">
+      <!-- R vertical stem -->
+      <rect x="0" y="0" width="14" height="64" rx="3"/>
+      <!-- R top bowl -->
+      <path d="M0 0 L34 0 C50 0 58 8 58 20 C58 32 50 40 34 40 L0 40 Z"/>
+      <!-- R leg -->
+      <path d="M30 40 L54 64 L42 64 L22 40 Z"/>
+      <!-- R inner cutout -->
+      <rect x="18" y="12" width="24" height="16" rx="2" fill="url(#bgGrad)"/>
+    </g>
+    
+    <!-- Arrow pointing top-right -->
+    <g transform="translate(40, -200) scale(4.5)">
+      <!-- Arrow shaft (diagonal) -->
+      <rect x="0" y="14" width="44" height="10" rx="3" transform="rotate(-45 22 19)"/>
+      <!-- Arrow head -->
+      <path d="M30 0 L46 0 L46 16 L30 0 Z"/>
+    </g>
+  </g>
+</svg>

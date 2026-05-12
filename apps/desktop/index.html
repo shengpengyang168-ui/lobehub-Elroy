@@ -1,0 +1,125 @@
+<!doctype html>
+<html class="desktop">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: inherit;
+      gap: 12px;
+    }
+
+    @keyframes loading-draw {
+      0% {
+        stroke-dashoffset: 1000;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes loading-fill {
+      30% {
+        fill-opacity: 0.05;
+      }
+
+      100% {
+        fill-opacity: 1;
+      }
+    }
+
+    #loading-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #1f1f1f;
+    }
+
+    #loading-brand svg path {
+      fill: currentcolor;
+      fill-opacity: 0;
+      stroke: currentcolor;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      stroke-width: 0.25em;
+      animation:
+        loading-draw 2s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+        loading-fill 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    html[data-theme='dark'] #loading-brand {
+      color: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body style="height: 100%">
+  <script>
+    (function () {
+      var theme = 'system';
+      try {
+        theme = localStorage.getItem('theme') || 'system';
+      } catch (_) { }
+      var systemTheme =
+        window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+      var resolvedTheme = theme === 'system' ? systemTheme : theme;
+      if (resolvedTheme === 'dark' || resolvedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', resolvedTheme);
+      }
+      // Check URL query parameter for locale (set by Electron main process from stored settings)
+      var urlParams = new URLSearchParams(window.location.search);
+      var locale = urlParams.get('lng') || navigator.language || 'en-US';
+      document.documentElement.lang = locale;
+      var rtl = ['ar', 'arc', 'dv', 'fa', 'ha', 'he', 'khw', 'ks', 'ku', 'ps', 'ur', 'yi'];
+      document.documentElement.dir =
+        rtl.indexOf(locale.split('-')[0].toLowerCase()) >= 0 ? 'rtl' : 'ltr';
+    })();
+  </script>
+  <div id="loading-screen">
+    <div id="loading-brand" aria-label="Loading" role="status" style="width:48px;height:48px">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="48" height="48">
+        <defs>
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f8f8fa" />
+            <stop offset="100%" stop-color="#eaeaed" />
+          </linearGradient>
+          <linearGradient id="rGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3a3a3e" />
+            <stop offset="100%" stop-color="#1c1c1f" />
+          </linearGradient>
+        </defs>
+        <rect width="1024" height="1024" rx="224" fill="url(#bgGrad)" />
+        <g transform="translate(512, 512)" fill="url(#rGrad)">
+          <g transform="translate(-200, -160) scale(5)">
+            <rect x="0" y="0" width="14" height="64" rx="3" />
+            <path d="M0 0 L34 0 C50 0 58 8 58 20 C58 32 50 40 34 40 L0 40 Z" />
+            <path d="M30 40 L54 64 L42 64 L22 40 Z" />
+            <rect x="18" y="12" width="24" height="16" rx="2" fill="url(#bgGrad)" />
+          </g>
+          <g transform="translate(40, -200) scale(4.5)">
+            <rect x="0" y="14" width="44" height="10" rx="3" transform="rotate(-45 22 19)" />
+            <path d="M30 0 L46 0 L46 16 L30 0 Z" />
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div id="root" style="height: 100%"></div>
+  <script>
+    window.__SERVER_CONFIG__ = undefined;
+  </script>
+  <script type="module" src="../../src/spa/entry.desktop.tsx"></script>
+</body>
+
+</html>
