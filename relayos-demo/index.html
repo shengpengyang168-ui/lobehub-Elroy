@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RelayOS - Intelligent AI Routing Platform</title>
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a12;
+  --panel:#12121e;
+  --glass:rgba(18,18,35,0.65);
+  --glass-border:rgba(120,120,255,0.12);
+  --neon-blue:#4d9fff;
+  --neon-purple:#a855f7;
+  --neon-cyan:#22d3ee;
+  --gradient:linear-gradient(135deg,#4d9fff,#a855f7);
+  --text:#e2e8f0;
+  --text-dim:#94a3b8;
+  --radius:16px;
+  --glow-blue:0 0 20px rgba(77,159,255,0.3);
+  --glow-purple:0 0 20px rgba(168,85,247,0.3);
+}
+html,body{height:100%;font-family:'Inter','MiSans',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;width:100%;height:100%;position:relative}
+.panel-left{width:38%;min-width:400px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
+.panel-right{flex:1;display:flex;flex-direction:column;position:relative;z-index:2;padding:20px;overflow-y:auto}
+
+/* ===== CANVAS BACKGROUND ===== */
+#particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.cosmic-grid{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;
+  background-image:
+    linear-gradient(rgba(77,159,255,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(77,159,255,0.03) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none}
+
+/* ===== LOGIN CARD ===== */
+.login-card{
+  background:var(--glass);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius);
+  padding:48px 40px;
+  width:380px;
+  box-shadow:0 8px 60px rgba(0,0,0,0.5),var(--glow-blue);
+  position:relative;
+  overflow:hidden;
+}
+.login-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 180deg,transparent,rgba(77,159,255,0.05),transparent 30%);
+  animation:cardSpin 8s linear infinite}
+@keyframes cardSpin{to{transform:rotate(360deg)}}
+
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo h1{font-size:28px;font-weight:700;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px}
+.login-logo p{font-size:13px;color:var(--text-dim);margin-top:8px;line-height:1.5}
+
+.form-group{margin-bottom:20px;position:relative}
+.form-group label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.form-group input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(120,120,255,0.15);border-radius:10px;color:var(--text);font-size:14px;outline:none;transition:all .3s}
+.form-group input:focus{border-color:var(--neon-blue);box-shadow:0 0 12px rgba(77,159,255,0.2)}
+.form-group input::placeholder{color:rgba(148,163,184,0.5)}
+
+.login-btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--gradient);color:#fff;font-size:15px;font-weight:600;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .3s;margin-top:8px}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 4px 30px rgba(77,159,255,0.4),0 4px 30px rgba(168,85,247,0.3)}
+.login-btn::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(transparent,rgba(255,255,255,0.1),transparent);transform:rotate(45deg);animation:btnShine 3s infinite}
+@keyframes btnShine{0%,100%{transform:translateX(-100%) rotate(45deg)}50%{transform:translateX(100%) rotate(45deg)}}
+
+.social-login{margin-top:28px;text-align:center}
+.social-login p{font-size:12px;color:var(--text-dim);margin-bottom:14px}
+.social-icons{display:flex;justify-content:center;gap:16px}
+.social-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:16px}
+.social-icon:hover{border-color:var(--neon-blue);box-shadow:var(--glow-blue);transform:translateY(-2px)}
+
+/* ===== RIGHT PANEL - DASHBOARD ===== */
+.dashboard{display:flex;flex:1;gap:16px;height:100%}
+.nav-bar{width:56px;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px}
+.nav-item{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:16px;color:var(--text-dim)}
+.nav-item:hover{background:rgba(77,159,255,0.1);color:var(--neon-blue)}
+.nav-item.active{background:rgba(77,159,255,0.15);color:var(--neon-blue);box-shadow:var(--glow-blue)}
+
+.main-content{flex:1;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+
+/* Console */
+.console-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:20px;position:relative}
+.console-title{font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.console-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--neon-cyan);box-shadow:0 0 8px var(--neon-cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.console-input{width:100%;padding:14px 18px;background:rgba(0,0,0,0.3);border:1px solid rgba(77,159,255,0.1);border-radius:10px;color:var(--neon-cyan);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;position:relative}
+.console-input::placeholder{color:rgba(34,211,238,0.3)}
+
+/* Model chips */
+.model-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.chip{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);color:var(--neon-blue);cursor:pointer;transition:all .3s;white-space:nowrap}
+.chip:hover{background:rgba(77,159,255,0.15);box-shadow:var(--glow-blue);transform:translateY(-1px)}
+.chip.active{background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4);color:var(--neon-purple);box-shadow:var(--glow-purple)}
+
+/* Middle row */
+.middle-row{display:flex;gap:16px;flex:1;min-height:0}
+
+/* Topology */
+.topology-card{flex:1.5;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden}
+.topology-card canvas{width:100%;height:100%;display:block}
+
+/* Stats panel */
+.stats-panel{flex:1;display:flex;flex-direction:column;gap:12px}
+.stat-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:12px;padding:14px 16px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:22px;font-weight:700;margin-top:4px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:8px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:2px;background:var(--gradient);animation:barGrow 2s ease-out forwards}
+@keyframes barGrow{from{width:0}}
+
+/* Activity log */
+.activity-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;max-height:140px;overflow-y:auto}
+.activity-card h3{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.log-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.log-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-dot.success{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.log-dot.info{background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue)}
+.log-dot.warn{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
+.log-time{color:var(--text-dim);font-family:monospace;font-size:11px;flex-shrink:0}
+
+/* Bottom capability cards */
+.capabilities{display:flex;gap:14px}
+.cap-card{flex:1;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:12px;padding:16px;text-align:center;transition:all .3s;cursor:default}
+.cap-card:hover{border-color:rgba(77,159,255,0.3);box-shadow:var(--glow-blue);transform:translateY(-2px)}
+.cap-icon{font-size:24px;margin-bottom:8px}
+.cap-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.cap-desc{font-size:11px;color:var(--text-dim)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(77,159,255,0.3);border-radius:2px}
+
+/* Responsive */
+@media(max-width:1200px){.panel-left{width:35%;min-width:340px}.login-card{width:320px;padding:36px 28px}}
+@media(max-width:900px){.app{flex-direction:column}.panel-left{width:100%;min-width:auto;padding:40px 0}.panel-right{padding:16px}}
+</style>
+</head>
+<body>
+<canvas id="particles-canvas"></canvas>
+<div class="cosmic-grid"></div>
+
+<div class="app">
+  <!-- LEFT PANEL: Login -->
+  <div class="panel-left">
+    <div class="login-card">
+      <div class="login-logo">
+        <h1>RelayOS</h1>
+        <p>智能 API 路由平台<br/>中继一切，连接每个模型</p>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="Enter password" />
+      </div>
+      <button class="login-btn">Sign In</button>
+      <div class="social-login">
+        <p>Or continue with</p>
+        <div class="social-icons">
+          <div class="social-icon" title="GitHub">&#9679;</div>
+          <div class="social-icon" title="Google">G</div>
+          <div class="social-icon" title="SSO">&#9670;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: Dashboard -->
+  <div class="panel-right">
+    <div class="dashboard">
+      <!-- Vertical nav -->
+      <div class="nav-bar">
+        <div class="nav-item active" title="Dashboard">&#9632;</div>
+        <div class="nav-item" title="Models">&#9678;</div>
+        <div class="nav-item" title="Routes">&#8644;</div>
+        <div class="nav-item" title="Logs">&#9776;</div>
+        <div class="nav-item" title="Settings">&#9881;</div>
+      </div>
+
+      <!-- Main content area -->
+      <div class="main-content">
+        <!-- API Console -->
+        <div class="console-card">
+          <div class="console-title">API Control Console</div>
+          <input class="console-input" placeholder="Enter API request... e.g. POST /v1/chat/completions" readonly />
+          <div class="model-chips">
+            <span class="chip active">GPT-4o</span>
+            <span class="chip">Claude 3.5</span>
+            <span class="chip">Gemini Pro</span>
+            <span class="chip">DeepSeek</span>
+            <span class="chip">Llama 3</span>
+            <span class="chip">Mistral</span>
+          </div>
+        </div>
+
+        <!-- Middle: Topology + Stats -->
+        <div class="middle-row">
+          <div class="topology-card">
+            <canvas id="topology-canvas"></canvas>
+          </div>
+          <div class="stats-panel">
+            <div class="stat-card">
+              <span class="stat-label">Active Nodes</span>
+              <span class="stat-value">128</span>
+              <div class="stat-bar"><div class="stat-bar-fill" style="width:85%"></div></div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Online Models</span>
+              <span class="stat-value">42</span>
+              <div class="stat-bar"><div class="stat-bar-fill" style="width:70%"></div></div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Avg Latency</span>
+              <span class="stat-value">187ms</span>
+              <div class="stat-bar"><div class="stat-bar-fill" style="width:35%"></div></div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Success Rate</span>
+              <span class="stat-value">99.7%</span>
+              <div class="stat-bar"><div class="stat-bar-fill" style="width:99%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="activity-card">
+          <h3>Recent Activity</h3>
+          <div class="log-item"><span class="log-dot success"></span><span class="log-time">12:04:32</span><span>GPT-4o routed via US-West node &mdash; 142ms</span></div>
+          <div class="log-item"><span class="log-dot info"></span><span class="log-time">12:04:28</span><span>Claude 3.5 fallback triggered &mdash; primary timeout</span></div>
+          <div class="log-item"><span class="log-dot success"></span><span class="log-time">12:04:21</span><span>DeepSeek balanced to EU-Central &mdash; 198ms</span></div>
+          <div class="log-item"><span class="log-dot warn"></span><span class="log-time">12:04:15</span><span>Gemini Pro latency spike detected &mdash; rerouting</span></div>
+          <div class="log-item"><span class="log-dot success"></span><span class="log-time">12:04:09</span><span>Llama 3 request completed &mdash; 167ms</span></div>
+        </div>
+
+        <!-- Capability Cards -->
+        <div class="capabilities">
+          <div class="cap-card">
+            <div class="cap-icon">&#9889;</div>
+            <div class="cap-title">Sub-300ms Global Relay</div>
+            <div class="cap-desc">Ultra-low latency routing across 40+ regions</div>
+          </div>
+          <div class="cap-card">
+            <div class="cap-icon">&#128274;</div>
+            <div class="cap-title">Encrypted Multi-Hop Relay</div>
+            <div class="cap-desc">End-to-end encrypted routing through secure nodes</div>
+          </div>
+          <div class="cap-card">
+            <div class="cap-icon">&#9878;</div>
+            <div class="cap-title">Adaptive Model Balancing</div>
+            <div class="cap-desc">Intelligent load distribution across AI providers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== PARTICLE BACKGROUND =====
+(function(){
+  const canvas=document.getElementById('particles-canvas');
+  const ctx=canvas.getContext('2d');
+  let w,h,particles=[];
+  function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight}
+  window.addEventListener('resize',resize);resize();
+
+  class Particle{
+    constructor(){this.reset()}
+    reset(){
+      this.x=Math.random()*w;this.y=Math.random()*h;
+      this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;
+      this.r=Math.random()*1.5+0.5;
+      this.alpha=Math.random()*0.4+0.1;
+      this.color=Math.random()>0.5?'77,159,255':'168,85,247';
+    }
+    update(){
+      this.x+=this.vx;this.y+=this.vy;
+      if(this.x<0||this.x>w||this.y<0||this.y>h)this.reset();
+    }
+    draw(){
+      ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${this.color},${this.alpha})`;ctx.fill();
+    }
+  }
+  for(let i=0;i<80;i++)particles.push(new Particle());
+
+  function animate(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{p.update();p.draw()});
+    // Draw connections
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x;
+        const dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(77,159,255,${0.06*(1-dist/120)})`;
+          ctx.lineWidth=0.5;ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ===== TOPOLOGY VISUALIZATION =====
+(function(){
+  const canvas=document.getElementById('topology-canvas');
+  const ctx=canvas.getContext('2d');
+  let w,h;
+  function resize(){
+    const rect=canvas.parentElement.getBoundingClientRect();
+    w=canvas.width=rect.width-32;h=canvas.height=rect.height-32;
+  }
+  window.addEventListener('resize',resize);
+  setTimeout(resize,100);
+
+  const nodes=[];
+  const nodeCount=12;
+  for(let i=0;i<nodeCount;i++){
+    nodes.push({
+      x:0.15+Math.random()*0.7,
+      y:0.15+Math.random()*0.7,
+      r:Math.random()*6+4,
+      pulse:Math.random()*Math.PI*2,
+      speed:0.02+Math.random()*0.02,
+      color:i<3?'#4d9fff':i<6?'#a855f7':i<9?'#22d3ee':'#22c55e'
+    });
+  }
+  const edges=[];
+  for(let i=0;i<nodeCount;i++){
+    const targets=[];
+    for(let j=0;j<2;j++){
+      let t=Math.floor(Math.random()*nodeCount);
+      if(t!==i&&!targets.includes(t)){targets.push(t);edges.push([i,t])}
+    }
+  }
+
+  // Flowing particles on edges
+  const flowParticles=[];
+  for(let i=0;i<20;i++){
+    const edge=edges[Math.floor(Math.random()*edges.length)];
+    flowParticles.push({edge,t:Math.random(),speed:0.003+Math.random()*0.005});
+  }
+
+  function animate(){
+    if(!w||!h){requestAnimationFrame(animate);return}
+    ctx.clearRect(0,0,w,h);
+
+    // Draw edges
+    edges.forEach(([a,b])=>{
+      const ax=nodes[a].x*w,ay=nodes[a].y*h;
+      const bx=nodes[b].x*w,by=nodes[b].y*h;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
+      ctx.strokeStyle='rgba(77,159,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+    });
+
+    // Draw flow particles
+    flowParticles.forEach(fp=>{
+      fp.t+=fp.speed;
+      if(fp.t>1){fp.t=0;fp.edge=edges[Math.floor(Math.random()*edges.length)]}
+      const[a,b]=fp.edge;
+      const x=nodes[a].x*w+(nodes[b].x*w-nodes[a].x*w)*fp.t;
+      const y=nodes[a].y*h+(nodes[b].y*h-nodes[a].y*h)*fp.t;
+      ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);
+      ctx.fillStyle='rgba(77,159,255,0.7)';ctx.fill();
+      ctx.shadowColor='#4d9fff';ctx.shadowBlur=6;ctx.fill();ctx.shadowBlur=0;
+    });
+
+    // Draw nodes
+    nodes.forEach(n=>{
+      n.pulse+=n.speed;
+      const scale=1+Math.sin(n.pulse)*0.15;
+      const x=n.x*w,y=n.y*h,r=n.r*scale;
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle=n.color;ctx.shadowColor=n.color;ctx.shadowBlur=12;
+      ctx.fill();ctx.shadowBlur=0;
+      // Outer ring
+      ctx.beginPath();ctx.arc(x,y,r+4,0,Math.PI*2);
+      ctx.strokeStyle=n.color.replace(')',',0.3)').replace('rgb','rgba');
+      ctx.lineWidth=1;ctx.stroke();
+    });
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ===== CONSOLE TYPING EFFECT =====
+(function(){
+  const input=document.querySelector('.console-input');
+  const texts=['POST /v1/chat/completions','GET /v1/models','POST /v1/embeddings','GET /v1/routes/status'];
+  let idx=0,charIdx=0,deleting=false;
+  function type(){
+    const current=texts[idx];
+    if(!deleting){
+      input.value=current.slice(0,charIdx++);
+      if(charIdx>current.length){setTimeout(()=>{deleting=true;type()},2000);return}
+    }else{
+      input.value=current.slice(0,charIdx--);
+      if(charIdx<0){deleting=false;idx=(idx+1)%texts.length;charIdx=0}
+    }
+    setTimeout(type,deleting?30:80);
+  }
+  setTimeout(type,1000);
+})();
+
+// ===== CHIP INTERACTION =====
+document.querySelectorAll('.chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
