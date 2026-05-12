@@ -1,462 +1,352 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RelayOS - Intelligent AI Routing Platform</title>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>RelayOS</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a12;--glass:rgba(18,18,35,0.65);--glass-border:rgba(120,120,255,0.12);--neon-blue:#4d9fff;--neon-purple:#a855f7;--neon-cyan:#22d3ee;--gradient:linear-gradient(135deg,#4d9fff,#a855f7);--text:#e2e8f0;--text-dim:#94a3b8;--radius:16px;--glow-blue:0 0 20px rgba(77,159,255,0.3);--glow-purple:0 0 20px rgba(168,85,247,0.3)}
-html,body{height:100%;font-family:'Inter','MiSans',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
-#particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.cosmic-grid{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;background-image:linear-gradient(rgba(77,159,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(77,159,255,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
-.lang-switch{position:fixed;top:20px;right:20px;z-index:999;display:flex;gap:4px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:8px;padding:4px}
-.lang-btn{padding:6px 14px;border:none;border-radius:6px;background:transparent;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;transition:all .3s}
-.lang-btn.active{background:rgba(77,159,255,0.2);color:var(--neon-blue);box-shadow:var(--glow-blue)}
+:root{--bg:#0a0a14;--sidebar:#0f0f1a;--panel:#13131f;--glass:rgba(18,18,35,0.7);--glass-border:rgba(100,100,255,0.1);--blue:#4d9fff;--purple:#a855f7;--cyan:#22d3ee;--green:#22c55e;--gradient:linear-gradient(135deg,#4d9fff,#a855f7);--text:#e2e8f0;--dim:#64748b;--radius:12px;--glow:0 0 20px rgba(77,159,255,0.2)}
+html,body{height:100%;font-family:Inter,MiSans,system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button{font-family:inherit;cursor:pointer}input,textarea{font-family:inherit}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(77,159,255,0.2);border-radius:2px}
+
+/* BG */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(77,159,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(77,159,255,0.02) 1px,transparent 1px);background-size:50px 50px}
+
+/* Lang */
+.lang-sw{position:fixed;top:14px;right:14px;z-index:999;display:flex;gap:3px;background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;padding:3px;backdrop-filter:blur(10px)}
+.lang-sw button{padding:4px 12px;border:none;border-radius:4px;background:transparent;color:var(--dim);font-size:11px;font-weight:600;transition:.2s}
+.lang-sw button.on{background:rgba(77,159,255,0.2);color:var(--blue)}
 
 /* Pages */
-.page{display:none;width:100%;height:100%;position:relative;z-index:2}
-.page.active{display:flex}
+.page{display:none;width:100%;height:100%;position:relative;z-index:2}.page.active{display:flex}
 
-/* LOGIN PAGE */
-#login-page{align-items:center;justify-content:center}
-.login-card{background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:48px 40px;width:400px;box-shadow:0 8px 60px rgba(0,0,0,0.5),var(--glow-blue);position:relative;overflow:hidden}
-.login-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 180deg,transparent,rgba(77,159,255,0.05),transparent 30%);animation:cardSpin 8s linear infinite}
-@keyframes cardSpin{to{transform:rotate(360deg)}}
-.login-logo{text-align:center;margin-bottom:32px;position:relative}
-.login-logo h1{font-size:32px;font-weight:700;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.login-logo p{font-size:13px;color:var(--text-dim);margin-top:8px;line-height:1.6}
-.form-group{margin-bottom:20px;position:relative}
-.form-group label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.form-group input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(120,120,255,0.15);border-radius:10px;color:var(--text);font-size:14px;outline:none;transition:all .3s}
-.form-group input:focus{border-color:var(--neon-blue);box-shadow:0 0 12px rgba(77,159,255,0.2)}
-.login-btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--gradient);color:#fff;font-size:15px;font-weight:600;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .3s;margin-top:8px}
-.login-btn:hover{transform:translateY(-1px);box-shadow:0 4px 30px rgba(77,159,255,0.4),0 4px 30px rgba(168,85,247,0.3)}
-.login-btn:active{transform:scale(0.98)}
-.login-btn::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(transparent,rgba(255,255,255,0.1),transparent);transform:rotate(45deg);animation:btnShine 3s infinite}
-@keyframes btnShine{0%,100%{transform:translateX(-100%) rotate(45deg)}50%{transform:translateX(100%) rotate(45deg)}}
-.social-login{margin-top:28px;text-align:center}
-.social-login p{font-size:12px;color:var(--text-dim);margin-bottom:14px}
-.social-icons{display:flex;justify-content:center;gap:16px}
-.social-icon{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s}
-.social-icon:hover{border-color:var(--neon-blue);box-shadow:var(--glow-blue);transform:translateY(-2px)}
-.social-icon svg{width:20px;height:20px;fill:var(--text-dim);transition:fill .3s}
-.social-icon:hover svg{fill:var(--neon-blue)}
-.login-error{color:#f87171;font-size:12px;margin-top:8px;display:none;text-align:center}
+/* LOGIN */
+#pg-login{align-items:center;justify-content:center}
+.login-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:16px;padding:44px 38px;width:380px;box-shadow:0 8px 50px rgba(0,0,0,0.5),var(--glow);position:relative;overflow:hidden}
+.login-card::before{content:'';position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent,rgba(77,159,255,0.04),transparent 25%);animation:spin 10s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-hd{text-align:center;margin-bottom:28px;position:relative}
+.login-hd h1{font-size:30px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-hd p{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
+.fg{margin-bottom:16px;position:relative}
+.fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.fg input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(100,100,255,0.12);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:.2s}
+.fg input:focus{border-color:var(--blue);box-shadow:0 0 10px rgba(77,159,255,0.15)}
+.login-btn{width:100%;padding:12px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:14px;font-weight:600;transition:.2s;margin-top:6px}
+.login-btn:hover{box-shadow:0 4px 20px rgba(77,159,255,0.4)}
+.login-btn:active{transform:scale(.98)}
+.social-row{margin-top:24px;text-align:center}
+.social-row p{font-size:11px;color:var(--dim);margin-bottom:10px}
+.social-row .icons{display:flex;justify-content:center;gap:12px}
+.social-row .si{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;transition:.2s;cursor:pointer}
+.social-row .si:hover{border-color:var(--blue);box-shadow:var(--glow);transform:translateY(-1px)}
+.social-row .si svg{width:16px;height:16px;fill:var(--dim)}
+.social-row .si:hover svg{fill:var(--blue)}
+.login-err{color:#f87171;font-size:11px;text-align:center;margin-top:6px;display:none}
 
-/* APP PAGE */
-#app-page{flex-direction:row;height:100%}
-.nav-bar{width:60px;background:var(--glass);backdrop-filter:blur(20px);border-right:1px solid var(--glass-border);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px}
-.nav-logo{width:36px;height:36px;border-radius:10px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;margin-bottom:16px;cursor:pointer}
-.nav-item{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;color:var(--text-dim);position:relative}
-.nav-item:hover{background:rgba(77,159,255,0.1);color:var(--neon-blue)}
-.nav-item.active{background:rgba(77,159,255,0.15);color:var(--neon-blue);box-shadow:var(--glow-blue)}
-.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--neon-blue);border-radius:0 3px 3px 0}
-.nav-item svg{width:18px;height:18px}
-.nav-spacer{flex:1}
-.nav-item.logout{color:#f87171}
-.nav-item.logout:hover{background:rgba(248,113,113,0.1);color:#f87171}
+/* APP */
+#pg-app{height:100%}
+.sidebar{width:62px;background:var(--sidebar);border-right:1px solid var(--glass-border);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0}
+.sb-logo{width:34px;height:34px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;margin-bottom:14px}
+.sb-item{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:.2s;color:var(--dim);position:relative;cursor:pointer}
+.sb-item:hover{background:rgba(77,159,255,0.08);color:var(--blue)}
+.sb-item.on{background:rgba(77,159,255,0.12);color:var(--blue)}
+.sb-item.on::after{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--blue);border-radius:0 3px 3px 0}
+.sb-item svg{width:18px;height:18px}
+.sb-sep{flex:1}
+.sb-item.out{color:#f87171}.sb-item.out:hover{background:rgba(248,113,113,0.08)}
 
-/* Main Content */
-.app-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.app-header{padding:16px 24px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;background:var(--glass);backdrop-filter:blur(12px)}
-.app-header h2{font-size:16px;font-weight:600}
-.header-right{display:flex;align-items:center;gap:12px}
-.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer}
-.app-body{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+/* Main */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{padding:12px 20px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;background:rgba(15,15,26,0.8);backdrop-filter:blur(8px)}
+.top-bar h2{font-size:15px;font-weight:600}
+.top-right{display:flex;align-items:center;gap:10px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
 
-/* Sections/Tabs */
-.tab-content{display:none}
-.tab-content.active{display:flex;flex-direction:column;gap:16px}
+/* Tab content */
+.tab-body{flex:1;overflow-y:auto;padding:20px;display:none;flex-direction:column;gap:16px}
+.tab-body.on{display:flex}
 
-/* Console */
-.console-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:20px}
-.console-title{font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.console-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--neon-cyan);box-shadow:0 0 8px var(--neon-cyan);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.console-input{width:100%;padding:14px 18px;background:rgba(0,0,0,0.3);border:1px solid rgba(77,159,255,0.1);border-radius:10px;color:var(--neon-cyan);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;transition:border-color .3s}
-.console-input:focus{border-color:var(--neon-blue)}
-.console-output{margin-top:12px;padding:12px 16px;background:rgba(0,0,0,0.4);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--neon-cyan);max-height:120px;overflow-y:auto;display:none;white-space:pre-wrap}
-.model-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.chip{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);color:var(--neon-blue);cursor:pointer;transition:all .3s}
-.chip:hover{background:rgba(77,159,255,0.15);box-shadow:var(--glow-blue);transform:translateY(-1px)}
-.chip.active{background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4);color:var(--neon-purple);box-shadow:var(--glow-purple)}
+/* Cards */
+.card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;backdrop-filter:blur(10px);transition:.2s}
+.card:hover{border-color:rgba(77,159,255,0.2)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.card-desc{font-size:11px;color:var(--dim)}
+.card-row{display:flex;gap:12px;flex-wrap:wrap}
 
-/* Cards Row */
-.cards-row{display:flex;gap:14px}
-.stat-card{flex:1;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:12px;padding:16px;transition:all .3s}
-.stat-card:hover{border-color:rgba(77,159,255,0.3);box-shadow:var(--glow-blue)}
-.stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase}
-.stat-value{font-size:24px;font-weight:700;margin-top:4px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.stat-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:8px;overflow:hidden}
-.stat-bar-fill{height:100%;border-radius:2px;background:var(--gradient);transition:width 1s ease}
+/* Stats row */
+.stats-row{display:flex;gap:12px}
+.stat{flex:1;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:14px;transition:.2s}
+.stat:hover{border-color:rgba(77,159,255,0.2);box-shadow:var(--glow)}
+.stat-label{font-size:10px;color:var(--dim);text-transform:uppercase}
+.stat-val{font-size:20px;font-weight:700;margin-top:2px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-/* Topology */
-.topology-section{display:flex;gap:16px;flex:1;min-height:200px}
-.topology-card{flex:2;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;min-height:200px}
-.topology-card canvas{width:100%;height:100%;display:block}
+/* Chat */
+.chat-wrap{display:flex;flex:1;gap:0;min-height:0}
+.chat-list{width:240px;border-right:1px solid var(--glass-border);overflow-y:auto;padding:12px}
+.chat-item{padding:10px 12px;border-radius:8px;cursor:pointer;transition:.15s;margin-bottom:4px}
+.chat-item:hover{background:rgba(77,159,255,0.06)}
+.chat-item.on{background:rgba(77,159,255,0.1)}
+.chat-item .ci-name{font-size:12px;font-weight:600}
+.chat-item .ci-msg{font-size:11px;color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-main{flex:1;display:flex;flex-direction:column}
+.chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:70%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{background:rgba(77,159,255,0.12);align-self:flex-end;border-bottom-right-radius:4px}
+.msg.ai{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-input-bar{padding:12px 20px;border-top:1px solid var(--glass-border);display:flex;gap:10px;align-items:center}
+.chat-input-bar input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:.2s}
+.chat-input-bar input:focus{border-color:var(--blue)}
+.send-btn{padding:8px 16px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:12px;font-weight:600;transition:.2s}
+.send-btn:hover{box-shadow:0 2px 12px rgba(77,159,255,0.4)}
 
-/* Activity */
-.activity-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px}
-.activity-card h3{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
-.log-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px}
-.log-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.log-dot.success{background:#22c55e;box-shadow:0 0 6px #22c55e}
-.log-dot.info{background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue)}
-.log-dot.warn{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
-.log-time{color:var(--text-dim);font-family:monospace;font-size:11px;flex-shrink:0}
+/* Tags */
+.tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(77,159,255,0.1);color:var(--blue);margin-right:4px}
+.tag.green{background:rgba(34,197,94,0.1);color:var(--green)}
+.tag.purple{background:rgba(168,85,247,0.1);color:var(--purple)}
 
-/* Capabilities */
-.capabilities{display:flex;gap:14px}
-.cap-card{flex:1;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:12px;padding:18px;text-align:center;transition:all .3s;cursor:pointer}
-.cap-card:hover{border-color:rgba(77,159,255,0.3);box-shadow:var(--glow-blue);transform:translateY(-2px)}
-.cap-icon{font-size:28px;margin-bottom:8px}
-.cap-title{font-size:12px;font-weight:600;margin-bottom:4px}
-.cap-desc{font-size:11px;color:var(--text-dim)}
+/* Image gallery */
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.img-card{aspect-ratio:1;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:40px;cursor:pointer;transition:.2s;overflow:hidden}
+.img-card:hover{border-color:rgba(77,159,255,0.3);box-shadow:var(--glow);transform:scale(1.02)}
 
-/* Models page */
-.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-.model-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:12px;padding:20px;cursor:pointer;transition:all .3s}
-.model-card:hover{border-color:rgba(77,159,255,0.3);box-shadow:var(--glow-blue);transform:translateY(-2px)}
-.model-card.online .model-status{background:#22c55e;box-shadow:0 0 6px #22c55e}
-.model-card.offline .model-status{background:#f87171;box-shadow:0 0 6px #f87171}
-.model-name{font-size:14px;font-weight:600;margin-bottom:4px}
-.model-provider{font-size:11px;color:var(--text-dim)}
-.model-status{width:8px;height:8px;border-radius:50%;position:absolute;top:12px;right:12px}
-.model-card{position:relative}
-.model-meta{margin-top:12px;display:flex;gap:8px}
-.model-tag{font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(77,159,255,0.1);color:var(--neon-blue)}
-
-/* Settings page */
-.settings-section{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:24px}
-.settings-section h3{font-size:14px;margin-bottom:16px;color:var(--text)}
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.setting-row:last-child{border-bottom:none}
-.setting-label{font-size:13px}
-.setting-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
-.toggle{width:40px;height:22px;border-radius:11px;background:rgba(255,255,255,0.1);cursor:pointer;position:relative;transition:all .3s}
-.toggle.on{background:rgba(77,159,255,0.4)}
-.toggle::after{content:'';width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .3s}
-.toggle.on::after{transform:translateX(18px)}
+/* Memory */
+.mem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.mem-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:.2s}
+.mem-card:hover{border-color:rgba(168,85,247,0.3);box-shadow:0 0 15px rgba(168,85,247,0.15)}
 
 /* Toast */
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:10px;padding:12px 24px;font-size:13px;z-index:9999;transition:transform .4s ease;box-shadow:0 4px 30px rgba(0,0,0,0.5)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:8px;padding:10px 20px;font-size:12px;z-index:9999;transition:.3s}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:rgba(34,197,94,0.3)}
-.toast.error{border-color:rgba(248,113,113,0.3)}
+</style></head><body>
+<canvas id="bg-canvas"></canvas><div class="grid-bg"></div>
+<div class="lang-sw"><button class="on" onclick="setLang('zh')">中文</button><button onclick="setLang('en')">EN</button></div>
 
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(77,159,255,0.3);border-radius:2px}
-</style>
-</head>
-<body>
-<canvas id="particles-canvas"></canvas>
-<div class="cosmic-grid"></div>
-<div class="lang-switch">
-  <button class="lang-btn active" onclick="switchLang('zh')">中文</button>
-  <button class="lang-btn" onclick="switchLang('en')">EN</button>
-</div>
+<!-- LOGIN -->
+<div class="page active" id="pg-login">
+<div class="login-card">
+<div class="login-hd"><h1>RelayOS</h1><p id="t-tag">智能 AI 路由平台<br>中继一切，连接每个模型</p></div>
+<div class="fg"><label id="t-el">邮箱</label><input id="in-email" placeholder="your@email.com"></div>
+<div class="fg"><label id="t-pl">密码</label><input id="in-pass" type="password" placeholder="输入密码"></div>
+<div class="login-err" id="login-err"></div>
+<button class="login-btn" id="t-lbtn" onclick="doLogin()">登 录</button>
+<div class="social-row"><p id="t-social">或通过以下方式登录</p><div class="icons">
+<div class="si" onclick="quickLogin('GitHub')"><svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>
+<div class="si" onclick="quickLogin('Google')"><svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></div>
+<div class="si" onclick="quickLogin('SSO')"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.4 9.36-7 10.5-3.6-1.14-7-5.67-7-10.5V6.3l7-3.12z"/></svg></div>
+</div></div></div></div>
 
-<!-- LOGIN PAGE -->
-<div class="page active" id="login-page">
-  <div class="login-card">
-    <div class="login-logo">
-      <h1>RelayOS</h1>
-      <p id="t-tagline">智能 API 路由平台<br/>中继一切，连接每个模型</p>
-    </div>
-    <div class="form-group">
-      <label id="t-email-label">邮箱</label>
-      <input type="email" id="email-input" placeholder="your@email.com" />
-    </div>
-    <div class="form-group">
-      <label id="t-pass-label">密码</label>
-      <input type="password" id="pass-input" placeholder="输入密码" />
-    </div>
-    <div class="login-error" id="login-error">邮箱或密码不能为空</div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">登 录</button>
-    <div class="social-login">
-      <p id="t-social-text">或通过以下方式登录</p>
-      <div class="social-icons">
-        <div class="social-icon" title="GitHub" onclick="socialLogin('GitHub')"><svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>
-        <div class="social-icon" title="Google" onclick="socialLogin('Google')"><svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></div>
-        <div class="social-icon" title="SSO" onclick="socialLogin('SSO')"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.4 9.36-7 10.5-3.6-1.14-7-5.67-7-10.5V6.3l7-3.12z"/><path d="M11 7h2v6h-2zm0 8h2v2h-2z"/></svg></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- APP PAGE -->
-<div class="page" id="app-page">
-  <div class="nav-bar">
-    <div class="nav-logo">R</div>
-    <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div>
-    <div class="nav-item" data-tab="models" onclick="switchTab('models')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16V8l-1-1.73-7-4-2 0-7 4L3 8v8l1 1.73 7 4 2 0 7-4L21 16z"/></svg></div>
-    <div class="nav-item" data-tab="routes" onclick="switchTab('routes')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div>
-    <div class="nav-item" data-tab="logs" onclick="switchTab('logs')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h18v2H3zm0 4h18v2H3zm0 4h12v2H3zm0 4h18v2H3zm0 4h12v2H3z"/></svg></div>
-    <div class="nav-item" data-tab="settings" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div>
-    <div class="nav-spacer"></div>
-    <div class="nav-item logout" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div>
-  </div>
-  <div class="app-main">
-    <div class="app-header">
-      <h2 id="t-page-title">仪表盘</h2>
-      <div class="header-right">
-        <span id="t-welcome" style="font-size:12px;color:var(--text-dim)">欢迎回来</span>
-        <div class="user-avatar">U</div>
-      </div>
-    </div>
-    <div class="app-body">
-      <!-- DASHBOARD TAB -->
-      <div class="tab-content active" id="tab-dashboard"></div>
-      <!-- MODELS TAB -->
-      <div class="tab-content" id="tab-models"></div>
-      <!-- ROUTES TAB -->
-      <div class="tab-content" id="tab-routes"></div>
-      <!-- LOGS TAB -->
-      <div class="tab-content" id="tab-logs"></div>
-      <!-- SETTINGS TAB -->
-      <div class="tab-content" id="tab-settings"></div>
-    </div>
-  </div>
-</div>
-
+<!-- APP -->
+<div class="page" id="pg-app">
+<div class="sidebar" id="sidebar"></div>
+<div class="main-area">
+<div class="top-bar"><h2 id="top-title">首页</h2><div class="top-right"><span id="t-welc" style="font-size:11px;color:var(--dim)">欢迎回来</span><div class="avatar">U</div></div></div>
+<div class="tab-body on" id="tab-home"></div>
+<div class="tab-body" id="tab-chat"></div>
+<div class="tab-body" id="tab-community"></div>
+<div class="tab-body" id="tab-image"></div>
+<div class="tab-body" id="tab-video"></div>
+<div class="tab-body" id="tab-resource"></div>
+<div class="tab-body" id="tab-memory"></div>
+<div class="tab-body" id="tab-tasks"></div>
+<div class="tab-body" id="tab-settings"></div>
+</div></div>
 <div class="toast" id="toast"></div>
-</body>
-</html>
-
-
 <script>
-// ===== I18N =====
-const i18n={
-  zh:{tagline:'智能 API 路由平台<br/>中继一切，连接每个模型',emailLabel:'邮箱',passLabel:'密码',passPlaceholder:'输入密码',loginBtn:'登 录',socialText:'或通过以下方式登录',consoleTitle:'API 控制台',consolePlaceholder:'输入 API 请求后按回车...',stat1:'活跃节点',stat2:'在线模型',stat3:'平均延迟',stat4:'成功率',activityTitle:'最近活动',cap1:'Sub-300ms 全球中继',cap1d:'超低延迟路由覆盖 40+ 区域',cap2:'加密多跳中继',cap2d:'端到端加密安全节点路由',cap3:'自适应模型均衡',cap3d:'智能负载分配跨 AI 供应商',welcome:'欢迎回来',pageDashboard:'仪表盘',pageModels:'模型管理',pageRoutes:'路由配置',pageLogs:'系统日志',pageSettings:'系统设置',loginError:'邮箱或密码不能为空',loginSuccess:'登录成功',logoutSuccess:'已退出登录',settingsGeneral:'通用设置',darkMode:'深色模式',notifications:'通知推送',autoRoute:'自动路由',encryption:'传输加密'},
-  en:{tagline:'Intelligent API Routing Platform<br/>Relay Everything, Connect Every Model',emailLabel:'EMAIL',passLabel:'PASSWORD',passPlaceholder:'Enter password',loginBtn:'Sign In',socialText:'Or continue with',consoleTitle:'API CONTROL CONSOLE',consolePlaceholder:'Enter API request and press Enter...',stat1:'Active Nodes',stat2:'Online Models',stat3:'Avg Latency',stat4:'Success Rate',activityTitle:'Recent Activity',cap1:'Sub-300ms Global Relay',cap1d:'Ultra-low latency routing across 40+ regions',cap2:'Encrypted Multi-Hop Relay',cap2d:'End-to-end encrypted through secure nodes',cap3:'Adaptive Model Balancing',cap3d:'Intelligent load distribution across providers',welcome:'Welcome back',pageDashboard:'Dashboard',pageModels:'Models',pageRoutes:'Routes',pageLogs:'System Logs',pageSettings:'Settings',loginError:'Email and password required',loginSuccess:'Login successful',logoutSuccess:'Logged out',settingsGeneral:'General Settings',darkMode:'Dark Mode',notifications:'Push Notifications',autoRoute:'Auto Routing',encryption:'Transport Encryption'}
+// === I18N ===
+const L={
+zh:{tag:'智能 AI 路由平台<br>中继一切，连接每个模型',el:'邮箱',pl:'密码',pp:'输入密码',lb:'登 录',social:'或通过以下方式登录',welc:'欢迎回来',err:'请输入邮箱和密码',
+home:'首页',chat:'对话',community:'社区',image:'AI 绘画',video:'AI 视频',resource:'知识库',memory:'记忆',tasks:'任务',settings:'设置',
+homeDesc:'开始新对话或选择已有助手',recentChat:'最近对话',quickStart:'快速开始',agents:'智能体市场',models:'模型管理',plugins:'插件中心',
+chatPh:'输入消息...',send:'发送',
+imgTitle:'AI 图像生成',imgDesc:'输入描述，生成精美图像',vidTitle:'AI 视频生成',vidDesc:'文字描述生成视频内容',
+resTitle:'知识库管理',resDesc:'管理文件、文档和数据源',memTitle:'记忆系统',memDesc:'AI 的长期记忆与偏好学习',
+taskTitle:'任务管理',taskDesc:'管理 AI 代理执行的任务',
+setGeneral:'通用设置',setProvider:'模型服务商',setAppear:'外观主题',
+comTitle:'社区发现',comDesc:'发现优秀的智能体、模型和插件',
+statNodes:'活跃节点',statModels:'在线模型',statLatency:'平均延迟',statRate:'成功率'},
+en:{tag:'Intelligent AI Routing Platform<br>Relay Everything, Connect Every Model',el:'EMAIL',pl:'PASSWORD',pp:'Enter password',lb:'Sign In',social:'Or continue with',welc:'Welcome back',err:'Email and password required',
+home:'Home',chat:'Chat',community:'Community',image:'Image Gen',video:'Video Gen',resource:'Knowledge',memory:'Memory',tasks:'Tasks',settings:'Settings',
+homeDesc:'Start a new conversation or pick an agent',recentChat:'Recent Chats',quickStart:'Quick Start',agents:'Agent Market',models:'Model Hub',plugins:'Plugins',
+chatPh:'Type a message...',send:'Send',
+imgTitle:'AI Image Generation',imgDesc:'Describe and generate beautiful images',vidTitle:'AI Video Generation',vidDesc:'Text-to-video generation',
+resTitle:'Knowledge Base',resDesc:'Manage files, documents and data sources',memTitle:'Memory System',memDesc:'Long-term AI memory and preference learning',
+taskTitle:'Task Management',taskDesc:'Manage AI agent tasks',
+setGeneral:'General',setProvider:'Providers',setAppear:'Appearance',
+comTitle:'Community Discover',comDesc:'Find great agents, models and plugins',
+statNodes:'Active Nodes',statModels:'Online Models',statLatency:'Avg Latency',statRate:'Success Rate'}
 };
-let lang='zh';
-function t(k){return i18n[lang][k]||k}
-function switchLang(l){
-  lang=l;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===(l==='zh'?'中文':'EN')));
-  updateTexts();
-}
-function updateTexts(){
-  const el=id=>document.getElementById(id);
-  if(el('t-tagline'))el('t-tagline').innerHTML=t('tagline');
-  if(el('t-email-label'))el('t-email-label').textContent=t('emailLabel');
-  if(el('t-pass-label'))el('t-pass-label').textContent=t('passLabel');
-  if(el('pass-input'))el('pass-input').placeholder=t('passPlaceholder');
-  if(el('login-btn'))el('login-btn').textContent=t('loginBtn');
-  if(el('t-social-text'))el('t-social-text').textContent=t('socialText');
-  if(el('t-welcome'))el('t-welcome').textContent=t('welcome');
-  // Update current page title
-  const titles={dashboard:'pageDashboard',models:'pageModels',routes:'pageRoutes',logs:'pageLogs',settings:'pageSettings'};
-  if(el('t-page-title')&&currentTab)el('t-page-title').textContent=t(titles[currentTab]);
-  renderCurrentTab();
+let lang='zh';function t(k){return L[lang][k]||k}
+function setLang(l){lang=l;document.querySelectorAll('.lang-sw button').forEach(b=>b.classList.toggle('on',b.textContent.trim()===(l==='zh'?'中文':'EN')));applyLang();if(curTab)render(curTab)}
+function applyLang(){
+const s=id=>document.getElementById(id);
+if(s('t-tag'))s('t-tag').innerHTML=t('tag');
+if(s('t-el'))s('t-el').textContent=t('el');
+if(s('t-pl'))s('t-pl').textContent=t('pl');
+if(s('in-pass'))s('in-pass').placeholder=t('pp');
+if(s('t-lbtn'))s('t-lbtn').textContent=t('lb');
+if(s('t-social'))s('t-social').textContent=t('social');
+if(s('t-welc'))s('t-welc').textContent=t('welc');
 }
 
-// ===== PAGE NAVIGATION =====
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+// === NAV ===
+const tabs=[
+{id:'home',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>'},
+{id:'chat',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>'},
+{id:'community',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>'},
+{id:'image',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'},
+{id:'video',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>'},
+{id:'resource',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>'},
+{id:'memory',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-3.5l6-4.5-6-4.5v9z"/></svg>'},
+{id:'tasks',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>'},
+{id:'settings',icon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>'}
+];
+let curTab='home';
+function buildSidebar(){
+const sb=document.getElementById('sidebar');
+sb.innerHTML='<div class="sb-logo">R</div>'+tabs.map(t=>`<div class="sb-item${t.id===curTab?' on':''}" data-tab="${t.id}" onclick="go('${t.id}')">${t.icon}</div>`).join('')+'<div class="sb-sep"></div><div class="sb-item out" onclick="logout()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div>';
 }
+function go(tab){
+curTab=tab;
+document.querySelectorAll('.sb-item[data-tab]').forEach(el=>el.classList.toggle('on',el.dataset.tab===tab));
+document.querySelectorAll('.tab-body').forEach(el=>el.classList.toggle('on',el.id==='tab-'+tab));
+document.getElementById('top-title').textContent=t(tab);
+render(tab);
+}
+// === RENDER PAGES ===
+function render(tab){
+const el=document.getElementById('tab-'+tab);
+switch(tab){
+case 'home':el.innerHTML=`
+<div class="stats-row">
+<div class="stat"><div class="stat-label">${t('statNodes')}</div><div class="stat-val">128</div></div>
+<div class="stat"><div class="stat-label">${t('statModels')}</div><div class="stat-val">42</div></div>
+<div class="stat"><div class="stat-label">${t('statLatency')}</div><div class="stat-val">187ms</div></div>
+<div class="stat"><div class="stat-label">${t('statRate')}</div><div class="stat-val">99.7%</div></div>
+</div>
+<div class="card"><div class="card-title">${t('quickStart')}</div><div class="card-desc">${t('homeDesc')}</div>
+<div class="card-row" style="margin-top:12px">
+<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('chat')"><div style="font-size:24px;margin-bottom:6px">💬</div><div class="card-title">${t('chat')}</div></div>
+<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('community')"><div style="font-size:24px;margin-bottom:6px">🌐</div><div class="card-title">${t('agents')}</div></div>
+<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('image')"><div style="font-size:24px;margin-bottom:6px">🎨</div><div class="card-title">${t('image')}</div></div>
+<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('video')"><div style="font-size:24px;margin-bottom:6px">🎬</div><div class="card-title">${t('video')}</div></div>
+<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('resource')"><div style="font-size:24px;margin-bottom:6px">📚</div><div class="card-title">${t('resource')}</div></div>
+</div></div>
+<div class="card"><div class="card-title">${t('recentChat')}</div>
+<div style="margin-top:10px">
+${['GPT-4o: 帮我优化这段代码...','Claude: 分析这篇论文的核心观点...','DeepSeek: 生成一个 REST API...','Gemini: 翻译这段技术文档...'].map((m,i)=>`<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;cursor:pointer" onclick="go('chat')">${m}</div>`).join('')}
+</div></div>`;break;
 
-// ===== LOGIN =====
+case 'chat':el.innerHTML=`<div class="chat-wrap">
+<div class="chat-list">
+<div style="padding:8px;font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">${t('recentChat')}</div>
+${[{n:'GPT-4o 助手',m:'帮我优化这段代码的性能'},{n:'Claude 写作',m:'分析这篇论文的核心观点'},{n:'DeepSeek Coder',m:'生成一个 REST API 框架'},{n:'翻译助手',m:'翻译技术文档为中文'},{n:'Gemini Pro',m:'对比三种数据库方案'}].map((c,i)=>`<div class="chat-item${i===0?' on':''}" onclick="selectChat(this,'${c.n}')"><div class="ci-name">${c.n}</div><div class="ci-msg">${c.m}</div></div>`).join('')}
+</div>
+<div class="chat-main">
+<div class="chat-msgs" id="chat-msgs">
+<div class="msg ai">你好！我是 GPT-4o 助手，有什么可以帮你的？</div>
+<div class="msg user">帮我优化一段 JavaScript 代码的性能</div>
+<div class="msg ai">好的，请把代码发给我，我来帮你分析瓶颈并给出优化建议。</div>
+</div>
+<div class="chat-input-bar"><input id="chat-in" placeholder="${t('chatPh')}" onkeydown="if(event.key==='Enter')sendMsg()"><button class="send-btn" onclick="sendMsg()">${t('send')}</button></div>
+</div></div>`;break;
+
+case 'community':el.innerHTML=`
+<div class="card"><div class="card-title">${t('comTitle')}</div><div class="card-desc">${t('comDesc')}</div></div>
+<div class="card-grid">
+${[{n:'代码专家',d:'全栈编程助手',t:'Code'},{n:'翻译大师',d:'多语言翻译专家',t:'Language'},{n:'写作教练',d:'创意写作指导',t:'Writing'},{n:'数据分析师',d:'数据可视化与分析',t:'Data'},{n:'UI 设计师',d:'界面设计建议',t:'Design'},{n:'学术助手',d:'论文写作辅助',t:'Academic'},{n:'法律顾问',d:'法律文书辅助',t:'Legal'},{n:'营销策划',d:'营销文案生成',t:'Marketing'}].map(a=>`
+<div class="card" style="cursor:pointer" onclick="toast('${a.n}')">
+<div class="card-title">${a.n}</div><div class="card-desc">${a.d}</div>
+<div style="margin-top:8px"><span class="tag">${a.t}</span></div>
+</div>`).join('')}</div>`;break;
+
+case 'image':el.innerHTML=`
+<div class="card"><div class="card-title">${t('imgTitle')}</div><div class="card-desc">${t('imgDesc')}</div>
+<div style="display:flex;gap:8px;margin-top:12px"><input style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);font-size:13px;outline:none" placeholder="${lang==='zh'?'描述你想生成的图像...':'Describe the image...'}" id="img-prompt"><button class="send-btn" onclick="genImage()">Generate</button></div></div>
+<div class="img-grid">
+${['🌄','🏔️','🌊','🌃','🎆','🌌','🏙️','🌅','🎨','🖼️','🌈','✨'].map(e=>`<div class="img-card" onclick="toast('Image generated!')">${e}</div>`).join('')}
+</div>`;break;
+
+case 'video':el.innerHTML=`
+<div class="card"><div class="card-title">${t('vidTitle')}</div><div class="card-desc">${t('vidDesc')}</div>
+<div style="display:flex;gap:8px;margin-top:12px"><input style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);font-size:13px;outline:none" placeholder="${lang==='zh'?'描述视频内容...':'Describe video content...'}"><button class="send-btn" onclick="toast('Video generating...')">Generate</button></div></div>
+<div class="card-grid">
+${[{n:'Seedance 1.0',d:'High quality dance generation'},{n:'Kling AI',d:'Cinematic video creation'},{n:'Sora',d:'Text to realistic video'},{n:'Runway Gen-3',d:'Creative video tools'}].map(v=>`<div class="card" style="cursor:pointer" onclick="toast('${v.n} selected')"><div style="font-size:28px;margin-bottom:8px">🎬</div><div class="card-title">${v.n}</div><div class="card-desc">${v.d}</div></div>`).join('')}
+</div>`;break;
+
+case 'resource':el.innerHTML=`
+<div class="card"><div class="card-title">${t('resTitle')}</div><div class="card-desc">${t('resDesc')}</div>
+<button class="send-btn" style="margin-top:12px" onclick="toast('Upload dialog')">${lang==='zh'?'上传文件':'Upload File'}</button></div>
+<div class="card-grid">
+${[{n:'API 文档.pdf',s:'2.4 MB',t:'PDF'},{n:'技术规范.md',s:'156 KB',t:'Markdown'},{n:'数据集.csv',s:'12.8 MB',t:'CSV'},{n:'研究论文.pdf',s:'4.1 MB',t:'PDF'},{n:'代码库索引',s:'890 KB',t:'Index'},{n:'会议记录.txt',s:'67 KB',t:'Text'}].map(f=>`<div class="card" style="cursor:pointer" onclick="toast('${f.n}')"><div class="card-title">${f.n}</div><div class="card-desc">${f.s}</div><div style="margin-top:6px"><span class="tag">${f.t}</span></div></div>`).join('')}
+</div>`;break;
+
+case 'memory':el.innerHTML=`
+<div class="card"><div class="card-title">${t('memTitle')}</div><div class="card-desc">${t('memDesc')}</div></div>
+<div class="mem-grid">
+${[{n:'用户偏好',d:'编程语言: TypeScript, Python | 框架: React, Next.js',icon:'⚙️'},{n:'对话上下文',d:'记住了 47 个关键上下文片段',icon:'🧠'},{n:'身份信息',d:'全栈开发者 | 关注 AI 和 Web 技术',icon:'👤'},{n:'学习经验',d:'从 128 次交互中学习了编码风格偏好',icon:'📖'},{n:'项目记忆',d:'跟踪 5 个活跃项目的技术栈和进度',icon:'📂'},{n:'交互统计',d:'总对话: 1,247 | 本周: 89 | 满意度: 96%',icon:'📊'}].map(m=>`<div class="mem-card" onclick="toast('${m.n}')"><div style="font-size:24px;margin-bottom:8px">${m.icon}</div><div class="card-title">${m.n}</div><div class="card-desc">${m.d}</div></div>`).join('')}
+</div>`;break;
+
+case 'tasks':el.innerHTML=`
+<div class="card"><div class="card-title">${t('taskTitle')}</div><div class="card-desc">${t('taskDesc')}</div>
+<button class="send-btn" style="margin-top:12px" onclick="toast('New task')">${lang==='zh'?'+ 新建任务':'+ New Task'}</button></div>
+<div class="card-grid">
+${[{n:'代码审查',s:'进行中',c:'green'},{n:'文档翻译',s:'待处理',c:'purple'},{n:'API 测试',s:'已完成',c:'green'},{n:'性能优化',s:'进行中',c:'green'},{n:'数据迁移',s:'待处理',c:'purple'},{n:'安全扫描',s:'已完成',c:'green'}].map(tk=>`<div class="card" style="cursor:pointer" onclick="toast('${tk.n}')"><div class="card-title">${tk.n}</div><div style="margin-top:6px"><span class="tag ${tk.c}">${tk.s}</span></div></div>`).join('')}
+</div>`;break;
+
+case 'settings':el.innerHTML=`
+<div class="card"><div class="card-title">${t('setGeneral')}</div>
+${[{n:lang==='zh'?'深色模式':'Dark Mode',on:true},{n:lang==='zh'?'通知推送':'Notifications',on:true},{n:lang==='zh'?'自动路由':'Auto Routing',on:true},{n:lang==='zh'?'传输加密':'Encryption',on:true},{n:lang==='zh'?'流式输出':'Streaming',on:true}].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="font-size:13px">${s.n}</span><div style="width:36px;height:20px;border-radius:10px;background:${s.on?'rgba(77,159,255,0.4)':'rgba(255,255,255,0.1)'};cursor:pointer;position:relative" onclick="this.classList.toggle('tg');this.style.background=this.classList.contains('tg')?'rgba(255,255,255,0.1)':'rgba(77,159,255,0.4)'"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:${s.on?'18px':'2px'};transition:.2s"></div></div></div>`).join('')}
+</div>
+<div class="card"><div class="card-title">${t('setProvider')}</div>
+<div class="card-grid" style="margin-top:12px">
+${['OpenAI','Anthropic','Google','DeepSeek','Mistral','Meta'].map(p=>`<div class="card" style="text-align:center;cursor:pointer" onclick="toast('${p} config')"><div class="card-title">${p}</div><div style="margin-top:4px"><span class="tag green">Active</span></div></div>`).join('')}
+</div></div>`;break;
+}}
+
+// === ACTIONS ===
 function doLogin(){
-  const email=document.getElementById('email-input').value.trim();
-  const pass=document.getElementById('pass-input').value.trim();
-  const err=document.getElementById('login-error');
-  if(!email||!pass){err.textContent=t('loginError');err.style.display='block';return;}
-  err.style.display='none';
-  document.getElementById('login-btn').textContent='...';
-  setTimeout(()=>{
-    showPage('app-page');
-    showToast(t('loginSuccess'),'success');
-    initApp();
-  },800);
+const e=document.getElementById('in-email').value,p=document.getElementById('in-pass').value;
+const err=document.getElementById('login-err');
+if(!e||!p){err.textContent=t('err');err.style.display='block';return}
+err.style.display='none';enterApp();
 }
-function socialLogin(provider){
-  showPage('app-page');
-  showToast(provider+' '+t('loginSuccess'),'success');
-  initApp();
+function quickLogin(p){enterApp();toast(p+' login')}
+function enterApp(){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById('pg-app').classList.add('active');
+buildSidebar();go('home');
 }
-function doLogout(){
-  showPage('login-page');
-  showToast(t('logoutSuccess'),'success');
-  document.getElementById('login-btn').textContent=t('loginBtn');
+function logout(){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById('pg-login').classList.add('active');
 }
-// Enter key login
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-page').classList.contains('active'))doLogin()});
+function selectChat(el,name){
+document.querySelectorAll('.chat-item').forEach(c=>c.classList.remove('on'));
+el.classList.add('on');
+document.getElementById('chat-msgs').innerHTML=`<div class="msg ai">你好！我是 ${name}，有什么可以帮你的？</div>`;
+}
+function sendMsg(){
+const input=document.getElementById('chat-in');if(!input||!input.value.trim())return;
+const msgs=document.getElementById('chat-msgs');
+msgs.innerHTML+=`<div class="msg user">${input.value}</div>`;
+const v=input.value;input.value='';
+setTimeout(()=>{msgs.innerHTML+=`<div class="msg ai">收到你的消息："${v}"。让我来处理一下...</div>`;msgs.scrollTop=msgs.scrollHeight},600);
+}
+function genImage(){const p=document.getElementById('img-prompt');toast(lang==='zh'?'正在生成图像...':'Generating image...');if(p)p.value=''}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show';setTimeout(()=>el.className='toast',2200)}
 
-// ===== TABS =====
-let currentTab='dashboard';
-function switchTab(tab){
-  currentTab=tab;
-  document.querySelectorAll('.nav-item[data-tab]').forEach(n=>n.classList.toggle('active',n.dataset.tab===tab));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  const titles={dashboard:'pageDashboard',models:'pageModels',routes:'pageRoutes',logs:'pageLogs',settings:'pageSettings'};
-  document.getElementById('t-page-title').textContent=t(titles[tab]);
-  renderCurrentTab();
-}
+// === PARTICLES ===
+(function(){const c=document.getElementById('bg-canvas'),x=c.getContext('2d');let w,h,ps=[];
+function rs(){w=c.width=innerWidth;h=c.height=innerHeight}addEventListener('resize',rs);rs();
+class P{constructor(){this.r()}r(){this.x=Math.random()*w;this.y=Math.random()*h;this.vx=(Math.random()-.5)*.2;this.vy=(Math.random()-.5)*.2;this.s=Math.random()*1.2+.4;this.a=Math.random()*.3+.05;this.cl=Math.random()>.5?'77,159,255':'168,85,247'}
+u(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w||this.y<0||this.y>h)this.r()}
+d(){x.beginPath();x.arc(this.x,this.y,this.s,0,6.28);x.fillStyle=`rgba(${this.cl},${this.a})`;x.fill()}}
+for(let i=0;i<50;i++)ps.push(new P);
+function loop(){x.clearRect(0,0,w,h);ps.forEach(p=>{p.u();p.d()});
+for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<90){x.beginPath();x.moveTo(ps[i].x,ps[i].y);x.lineTo(ps[j].x,ps[j].y);x.strokeStyle=`rgba(77,159,255,${.04*(1-d/90)})`;x.lineWidth=.4;x.stroke()}}
+requestAnimationFrame(loop)}loop()})();
 
-// ===== RENDER TABS =====
-function renderCurrentTab(){
-  switch(currentTab){
-    case 'dashboard':renderDashboard();break;
-    case 'models':renderModels();break;
-    case 'routes':renderRoutes();break;
-    case 'logs':renderLogs();break;
-    case 'settings':renderSettings();break;
-  }
-}
-function renderDashboard(){
-  const el=document.getElementById('tab-dashboard');
-  el.innerHTML=`
-    <div class="console-card">
-      <div class="console-title">${t('consoleTitle')}</div>
-      <input class="console-input" id="api-input" placeholder="${t('consolePlaceholder')}" onkeydown="if(event.key==='Enter')sendApiRequest()"/>
-      <div class="console-output" id="api-output"></div>
-      <div class="model-chips">
-        <span class="chip active" onclick="selectChip(this)">GPT-4o</span>
-        <span class="chip" onclick="selectChip(this)">Claude 3.5</span>
-        <span class="chip" onclick="selectChip(this)">Gemini Pro</span>
-        <span class="chip" onclick="selectChip(this)">DeepSeek</span>
-        <span class="chip" onclick="selectChip(this)">Llama 3</span>
-        <span class="chip" onclick="selectChip(this)">Mistral</span>
-      </div>
-    </div>
-    <div class="cards-row">
-      <div class="stat-card"><span class="stat-label">${t('stat1')}</span><span class="stat-value">128</span><div class="stat-bar"><div class="stat-bar-fill" style="width:85%"></div></div></div>
-      <div class="stat-card"><span class="stat-label">${t('stat2')}</span><span class="stat-value">42</span><div class="stat-bar"><div class="stat-bar-fill" style="width:70%"></div></div></div>
-      <div class="stat-card"><span class="stat-label">${t('stat3')}</span><span class="stat-value">187ms</span><div class="stat-bar"><div class="stat-bar-fill" style="width:35%"></div></div></div>
-      <div class="stat-card"><span class="stat-label">${t('stat4')}</span><span class="stat-value">99.7%</span><div class="stat-bar"><div class="stat-bar-fill" style="width:99%"></div></div></div>
-    </div>
-    <div class="topology-section">
-      <div class="topology-card"><canvas id="topology-canvas"></canvas></div>
-      <div class="activity-card" style="flex:1;max-height:none">
-        <h3>${t('activityTitle')}</h3>
-        <div class="log-item"><span class="log-dot success"></span><span class="log-time">12:04:32</span><span>GPT-4o → US-West 142ms</span></div>
-        <div class="log-item"><span class="log-dot info"></span><span class="log-time">12:04:28</span><span>Claude 3.5 fallback</span></div>
-        <div class="log-item"><span class="log-dot success"></span><span class="log-time">12:04:21</span><span>DeepSeek → EU-Central 198ms</span></div>
-        <div class="log-item"><span class="log-dot warn"></span><span class="log-time">12:04:15</span><span>Gemini Pro rerouting</span></div>
-        <div class="log-item"><span class="log-dot success"></span><span class="log-time">12:04:09</span><span>Llama 3 → 167ms</span></div>
-      </div>
-    </div>
-    <div class="capabilities">
-      <div class="cap-card" onclick="showToast('⚡ ${t("cap1")}','success')"><div class="cap-icon">⚡</div><div class="cap-title">${t('cap1')}</div><div class="cap-desc">${t('cap1d')}</div></div>
-      <div class="cap-card" onclick="showToast('🔒 ${t("cap2")}','success')"><div class="cap-icon">🔒</div><div class="cap-title">${t('cap2')}</div><div class="cap-desc">${t('cap2d')}</div></div>
-      <div class="cap-card" onclick="showToast('⚖️ ${t("cap3")}','success')"><div class="cap-icon">⚖️</div><div class="cap-title">${t('cap3')}</div><div class="cap-desc">${t('cap3d')}</div></div>
-    </div>`;
-  setTimeout(initTopology,50);
-}
-function renderModels(){
-  const models=[
-    {name:'GPT-4o',provider:'OpenAI',online:true,tags:['Chat','Vision']},
-    {name:'Claude 3.5 Sonnet',provider:'Anthropic',online:true,tags:['Chat','Code']},
-    {name:'Gemini Pro',provider:'Google',online:true,tags:['Chat','Multi']},
-    {name:'DeepSeek V3',provider:'DeepSeek',online:true,tags:['Chat','Code']},
-    {name:'Llama 3 70B',provider:'Meta',online:true,tags:['Chat','Open']},
-    {name:'Mistral Large',provider:'Mistral',online:true,tags:['Chat','EU']},
-    {name:'GPT-3.5 Turbo',provider:'OpenAI',online:false,tags:['Legacy']},
-    {name:'PaLM 2',provider:'Google',online:false,tags:['Legacy']}
-  ];
-  document.getElementById('tab-models').innerHTML=`<div class="model-grid">${models.map(m=>`
-    <div class="model-card ${m.online?'online':'offline'}" onclick="showToast('${m.name} - ${m.provider}','success')">
-      <div class="model-status"></div>
-      <div class="model-name">${m.name}</div>
-      <div class="model-provider">${m.provider}</div>
-      <div class="model-meta">${m.tags.map(tag=>`<span class="model-tag">${tag}</span>`).join('')}</div>
-    </div>`).join('')}</div>`;
-}
-function renderRoutes(){
-  const routes=[
-    {path:'/v1/chat/completions',target:'GPT-4o → Claude 3.5 (fallback)',status:'active'},
-    {path:'/v1/embeddings',target:'OpenAI Ada-002',status:'active'},
-    {path:'/v1/images/generations',target:'DALL-E 3',status:'active'},
-    {path:'/v1/audio/transcriptions',target:'Whisper-1',status:'paused'},
-    {path:'/v1/completions',target:'GPT-3.5 (legacy)',status:'paused'}
-  ];
-  document.getElementById('tab-routes').innerHTML=`<div class="activity-card" style="max-height:none">
-    <h3>API Routes</h3>
-    ${routes.map(r=>`<div class="log-item" style="cursor:pointer" onclick="showToast('${r.path}','success')">
-      <span class="log-dot ${r.status==='active'?'success':'warn'}"></span>
-      <span style="font-weight:600;min-width:220px">${r.path}</span>
-      <span style="color:var(--text-dim)">${r.target}</span>
-    </div>`).join('')}
-  </div>`;
-}
-function renderLogs(){
-  const logs=[];
-  const types=['success','info','warn'];
-  const msgs=['Request routed successfully','Fallback triggered','Latency spike detected','New model connected','Cache hit ratio 94%','Rate limit applied','Node health check passed','Connection pool refreshed'];
-  for(let i=0;i<20;i++){
-    const h=12,m=Math.floor(Math.random()*60),s=Math.floor(Math.random()*60);
-    logs.push({type:types[Math.floor(Math.random()*3)],time:`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`,msg:msgs[Math.floor(Math.random()*msgs.length)]});
-  }
-  document.getElementById('tab-logs').innerHTML=`<div class="activity-card" style="max-height:none;overflow-y:auto;max-height:500px">
-    <h3>${t('activityTitle')}</h3>
-    ${logs.map(l=>`<div class="log-item"><span class="log-dot ${l.type}"></span><span class="log-time">${l.time}</span><span>${l.msg}</span></div>`).join('')}
-  </div>`;
-}
-function renderSettings(){
-  document.getElementById('tab-settings').innerHTML=`<div class="settings-section">
-    <h3>${t('settingsGeneral')}</h3>
-    <div class="setting-row"><div><div class="setting-label">${t('darkMode')}</div><div class="setting-desc">Enable dark theme</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-    <div class="setting-row"><div><div class="setting-label">${t('notifications')}</div><div class="setting-desc">Receive push notifications</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-    <div class="setting-row"><div><div class="setting-label">${t('autoRoute')}</div><div class="setting-desc">Automatically route to best model</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-    <div class="setting-row"><div><div class="setting-label">${t('encryption')}</div><div class="setting-desc">Enable end-to-end encryption</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-  </div>`;
-}
-
-// ===== HELPERS =====
-function selectChip(el){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
-function sendApiRequest(){
-  const input=document.getElementById('api-input');
-  const output=document.getElementById('api-output');
-  if(!input.value.trim())return;
-  output.style.display='block';
-  output.textContent=`> ${input.value}\n\n{"status":"ok","model":"${document.querySelector('.chip.active')?.textContent||'GPT-4o'}","latency":"${Math.floor(Math.random()*200+50)}ms","node":"us-west-2","encrypted":true}`;
-  input.value='';
-}
-function showToast(msg,type){
-  const toast=document.getElementById('toast');
-  toast.textContent=msg;toast.className='toast '+type+' show';
-  setTimeout(()=>toast.classList.remove('show'),2500);
-}
-function initApp(){currentTab='dashboard';renderDashboard();}
-
-// ===== TOPOLOGY =====
-function initTopology(){
-  const canvas=document.getElementById('topology-canvas');
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  const rect=canvas.parentElement.getBoundingClientRect();
-  let w=canvas.width=rect.width-32,h=canvas.height=rect.height-32;
-  const nodes=[],nodeCount=12;
-  for(let i=0;i<nodeCount;i++)nodes.push({x:0.1+Math.random()*0.8,y:0.1+Math.random()*0.8,r:Math.random()*5+4,pulse:Math.random()*6.28,speed:0.02+Math.random()*0.02,color:['#4d9fff','#a855f7','#22d3ee','#22c55e'][i%4]});
-  const edges=[];
-  for(let i=0;i<nodeCount;i++){let t1=Math.floor(Math.random()*nodeCount);if(t1!==i)edges.push([i,t1]);let t2=Math.floor(Math.random()*nodeCount);if(t2!==i)edges.push([i,t2]);}
-  const flows=[];
-  for(let i=0;i<25;i++)flows.push({edge:edges[Math.floor(Math.random()*edges.length)],t:Math.random(),speed:0.003+Math.random()*0.005});
-  function animate(){
-    ctx.clearRect(0,0,w,h);
-    edges.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(nodes[a].x*w,nodes[a].y*h);ctx.lineTo(nodes[b].x*w,nodes[b].y*h);ctx.strokeStyle='rgba(77,159,255,0.12)';ctx.lineWidth=1;ctx.stroke();});
-    flows.forEach(f=>{f.t+=f.speed;if(f.t>1){f.t=0;f.edge=edges[Math.floor(Math.random()*edges.length)];}const[a,b]=f.edge;const x=nodes[a].x*w+(nodes[b].x*w-nodes[a].x*w)*f.t;const y=nodes[a].y*h+(nodes[b].y*h-nodes[a].y*h)*f.t;ctx.beginPath();ctx.arc(x,y,2,0,6.28);ctx.fillStyle='rgba(77,159,255,0.8)';ctx.shadowColor='#4d9fff';ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0;});
-    nodes.forEach(n=>{n.pulse+=n.speed;const s=1+Math.sin(n.pulse)*0.12;const x=n.x*w,y=n.y*h,r=n.r*s;ctx.beginPath();ctx.arc(x,y,r,0,6.28);ctx.fillStyle=n.color;ctx.shadowColor=n.color;ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(x,y,r+5,0,6.28);ctx.strokeStyle='rgba(77,159,255,0.15)';ctx.stroke();});
-    requestAnimationFrame(animate);
-  }
-  animate();
-}
-
-// ===== PARTICLES =====
-(function(){
-  const c=document.getElementById('particles-canvas'),ctx=c.getContext('2d');
-  let w,h,ps=[];
-  function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
-  addEventListener('resize',resize);resize();
-  class P{constructor(){this.reset()}reset(){this.x=Math.random()*w;this.y=Math.random()*h;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.r=Math.random()*1.5+.5;this.a=Math.random()*.4+.1;this.col=Math.random()>.5?'77,159,255':'168,85,247'}update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w||this.y<0||this.y>h)this.reset()}draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,6.28);ctx.fillStyle=`rgba(${this.col},${this.a})`;ctx.fill()}}
-  for(let i=0;i<70;i++)ps.push(new P);
-  function loop(){ctx.clearRect(0,0,w,h);ps.forEach(p=>{p.update();p.draw()});for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(ps[i].x,ps[i].y);ctx.lineTo(ps[j].x,ps[j].y);ctx.strokeStyle=`rgba(77,159,255,${.05*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke()}}requestAnimationFrame(loop)}
-  loop();
-})();
-</script>
+// Enter key
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('pg-login').classList.contains('active'))doLogin()});
+</script></body></html>
