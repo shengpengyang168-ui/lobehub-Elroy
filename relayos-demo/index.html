@@ -162,6 +162,34 @@ body.theme-orange{--blue:#f97316;--purple:#eab308;--gradient:linear-gradient(135
 body.theme-cyan{--blue:#06b6d4;--purple:#3b82f6;--gradient:linear-gradient(135deg,#06b6d4,#3b82f6);--glow:0 0 20px rgba(6,182,212,0.3)}
 body.light-mode{--bg:#f3f4f6;--sidebar:#ffffff;--panel:#ffffff;--glass:rgba(255,255,255,0.7);--glass-border:rgba(0,0,0,0.08);--text:#0f172a;--dim:#64748b}
 body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(77,159,255,0.04) 1px,transparent 1px)}
+/* Apple ripple effect */
+.ripple{position:absolute;border-radius:50%;background:rgba(77,159,255,0.3);transform:scale(0);animation:rippleAnim .5s ease-out forwards;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(2.5);opacity:0}}
+
+/* Sidebar tooltip */
+.sb-tooltip{position:absolute;left:58px;top:50%;transform:translateY(-50%) translateX(-4px);background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;white-space:nowrap;opacity:0;pointer-events:none;transition:all .2s;z-index:100;color:var(--blue)}
+.sb-item:hover .sb-tooltip{opacity:1;transform:translateY(-50%) translateX(0)}
+
+/* Login chain scroll */
+.chain-scroll{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;border-radius:16px}
+.chain-line{position:absolute;width:1px;background:linear-gradient(to bottom,transparent,var(--blue),transparent);height:60px;opacity:0.3;animation:chainFall linear infinite}
+@keyframes chainFall{0%{top:-60px}100%{top:calc(100% + 60px)}}
+
+/* Dark globe */
+.globe-wrap{width:100%;display:flex;justify-content:center;padding:10px 0}
+.globe-wrap canvas{border-radius:50%;box-shadow:0 0 30px rgba(77,159,255,0.2),inset 0 0 20px rgba(0,0,0,0.5)}
+
+/* Globe Pet */
+.globe-pet{position:fixed;bottom:20px;right:20px;z-index:9997;cursor:pointer;transition:transform .3s}
+.globe-pet:hover{transform:scale(1.1) translateY(-4px)}
+.globe-pet canvas{border-radius:50%;box-shadow:0 0 20px rgba(77,159,255,0.4),0 0 40px rgba(168,85,247,0.2)}
+.pet-bubble{position:absolute;bottom:60px;right:0;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;font-size:11px;max-width:200px;line-height:1.4;opacity:0;transform:translateY(8px) scale(0.9);transition:all .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.pet-bubble.show{opacity:1;transform:translateY(0) scale(1)}
+.pet-bubble::after{content:'';position:absolute;bottom:-6px;right:20px;width:12px;height:12px;background:var(--glass);border:1px solid var(--glass-border);border-top:none;border-left:none;transform:rotate(45deg)}
+
+/* API card style */
+.api-card{background:linear-gradient(135deg,rgba(77,159,255,0.08),rgba(168,85,247,0.08));border:1px solid rgba(77,159,255,0.2);border-radius:var(--radius);padding:16px;cursor:pointer;transition:.2s}
+.api-card:hover{border-color:rgba(77,159,255,0.4);box-shadow:var(--glow);transform:translateY(-2px)}
 </style></head><body>
 <canvas id="bg-canvas"></canvas><div class="grid-bg"></div>
 <div class="lang-sw"><button class="on" onclick="setLang('zh')">中文</button><button onclick="setLang('en')">EN</button></div>
@@ -169,6 +197,7 @@ body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 
 <!-- LOGIN -->
 <div class="page active" id="pg-login">
 <div class="login-card">
+<div class="chain-scroll" id="chain-scroll"></div>
 <div class="login-hd"><h1>RelayOS</h1><p id="t-tag">智能 AI 路由平台<br>中继一切，连接每个模型</p></div>
 <div class="fg"><label id="t-el">邮箱</label><input id="in-email" placeholder="your@email.com"></div>
 <div class="fg"><label id="t-pl">密码</label><input id="in-pass" type="password" placeholder="输入密码"></div>
@@ -197,9 +226,10 @@ body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 
 </div></div>
 <div class="toast" id="toast"></div>
 
-<!-- AI Console FAB -->
-<div class="ai-fab" id="ai-fab" onclick="toggleAiConsole()" title="AI Console">
-<svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm1-13h-2v4H7v2h4v4h2v-4h4v-2h-4V7z"/></svg>
+<!-- Globe Pet -->
+<div class="globe-pet" id="globe-pet" onclick="toggleAiConsole()">
+<canvas id="pet-globe" width="50" height="50"></canvas>
+<div class="pet-bubble" id="pet-bubble"></div>
 </div>
 
 <!-- AI Console Panel -->
@@ -273,7 +303,15 @@ const tabs=[
 let curTab='home';
 function buildSidebar(){
 const sb=document.getElementById('sidebar');
-sb.innerHTML='<div class="sb-logo">R</div>'+tabs.map(t=>`<div class="sb-item${t.id===curTab?' on':''}" data-tab="${t.id}" onclick="go('${t.id}')">${t.icon}</div>`).join('')+'<div class="sb-sep"></div><div class="sb-item out" onclick="logout()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div>';
+const tabLabels={home:lang==='zh'?'首页':'Home',chat:lang==='zh'?'对话':'Chat',community:lang==='zh'?'社区':'Community',image:lang==='zh'?'绘画':'Image',video:lang==='zh'?'视频':'Video',resource:lang==='zh'?'知识库':'Files',memory:lang==='zh'?'记忆':'Memory',tasks:lang==='zh'?'任务':'Tasks',settings:lang==='zh'?'设置':'Settings'};
+sb.innerHTML='<div class="sb-logo">R</div>'+tabs.map(t=>`<div class="sb-item${t.id===curTab?' on':''}" data-tab="${t.id}" onclick="sidebarClick(event,this,'${t.id}')">${t.icon}<span class="sb-tooltip">${tabLabels[t.id]||t.id}</span></div>`).join('')+'<div class="sb-sep"></div><div class="sb-item out" onclick="sidebarClick(event,this,\'logout\')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span class="sb-tooltip">${lang==='zh'?'退出':'Logout'}</span></div>';
+}
+function sidebarClick(e,el,tab){
+const r=document.createElement('div');r.className='ripple';
+const rect=el.getBoundingClientRect();const size=Math.max(rect.width,rect.height);
+r.style.width=r.style.height=size+'px';r.style.left=(e.clientX-rect.left-size/2)+'px';r.style.top=(e.clientY-rect.top-size/2)+'px';
+el.appendChild(r);setTimeout(()=>r.remove(),500);
+if(tab==='logout')logout();else go(tab);
 }
 function go(tab){
 curTab=tab;
@@ -287,6 +325,7 @@ function render(tab){
 const el=document.getElementById('tab-'+tab);
 switch(tab){
 case 'home':el.innerHTML=`
+<div class="globe-wrap"><canvas id="home-globe" width="180" height="180"></canvas></div>
 <div class="stats-row">
 <div class="stat"><div class="stat-label">${t('statNodes')}</div><div class="stat-val">128</div></div>
 <div class="stat"><div class="stat-label">${t('statModels')}</div><div class="stat-val">42</div></div>
@@ -296,15 +335,15 @@ case 'home':el.innerHTML=`
 <div class="card"><div class="card-title">${t('quickStart')}</div><div class="card-desc">${t('homeDesc')}</div>
 <div class="card-row" style="margin-top:12px">
 <div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('chat')"><div style="font-size:24px;margin-bottom:6px">💬</div><div class="card-title">${t('chat')}</div></div>
+<div class="api-card" style="flex:1;text-align:center" onclick="toast('API Console')"><div style="font-size:24px;margin-bottom:6px">⚡</div><div class="card-title">API</div><div class="card-desc">${lang==='zh'?'路由控制台':'Routing Console'}</div></div>
 <div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('community')"><div style="font-size:24px;margin-bottom:6px">🌐</div><div class="card-title">${t('agents')}</div></div>
 <div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('image')"><div style="font-size:24px;margin-bottom:6px">🎨</div><div class="card-title">${t('image')}</div></div>
 <div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('video')"><div style="font-size:24px;margin-bottom:6px">🎬</div><div class="card-title">${t('video')}</div></div>
-<div class="card" style="flex:1;cursor:pointer;text-align:center" onclick="go('resource')"><div style="font-size:24px;margin-bottom:6px">📚</div><div class="card-title">${t('resource')}</div></div>
 </div></div>
 <div class="card"><div class="card-title">${t('recentChat')}</div>
 <div style="margin-top:10px">
 ${['GPT-4o: 帮我优化这段代码...','Claude: 分析这篇论文的核心观点...','DeepSeek: 生成一个 REST API...','Gemini: 翻译这段技术文档...'].map((m,i)=>`<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;cursor:pointer" onclick="go('chat')">${m}</div>`).join('')}
-</div></div>`;break;
+</div></div>`;setTimeout(initHomeGlobe,50);break;
 
 case 'chat':el.innerHTML=`<div class="chat-wrap">
 <div class="chat-list">
@@ -566,4 +605,87 @@ document.head.appendChild(st);})();
 setTimeout(updateAiConsoleUI,50);
 // 修改 setLang 以同步更新 AI 控制台
 const _origSetLang=setLang;window.setLang=function(l){_origSetLang(l);updateAiConsoleUI();};
+
+// === CHAIN SCROLL LOGIN ANIMATION ===
+(function(){
+const container=document.getElementById('chain-scroll');if(!container)return;
+for(let i=0;i<12;i++){
+const line=document.createElement('div');line.className='chain-line';
+line.style.left=Math.random()*100+'%';line.style.animationDuration=(2+Math.random()*3)+'s';
+line.style.animationDelay=Math.random()*3+'s';line.style.opacity=0.1+Math.random()*0.2;
+container.appendChild(line);
+}})();
+
+// === HOME GLOBE (dark earth with lights) ===
+function initHomeGlobe(){
+const c=document.getElementById('home-globe');if(!c)return;
+const ctx=c.getContext('2d');const w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-4;
+let rot=0;
+const cities=[];for(let i=0;i<60;i++)cities.push({lat:(Math.random()-0.5)*Math.PI,lng:Math.random()*Math.PI*2,brightness:0.3+Math.random()*0.7});
+function draw(){
+ctx.clearRect(0,0,w,h);
+ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+const grd=ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);
+grd.addColorStop(0,'#1a1a2e');grd.addColorStop(1,'#050510');
+ctx.fillStyle=grd;ctx.fill();
+ctx.strokeStyle='rgba(77,159,255,0.1)';ctx.lineWidth=1;ctx.stroke();
+// Latitude lines
+for(let i=-2;i<=2;i++){const y=cy+i*r*0.35;const rr=Math.sqrt(r*r-Math.pow(i*r*0.35,2));
+ctx.beginPath();ctx.ellipse(cx,y,rr,rr*0.3,0,0,Math.PI*2);ctx.strokeStyle='rgba(77,159,255,0.05)';ctx.stroke();}
+// City lights
+cities.forEach(city=>{
+const x2=cx+r*0.85*Math.cos(city.lat)*Math.sin(city.lng+rot);
+const y2=cy+r*0.85*Math.sin(city.lat);
+const z=Math.cos(city.lat)*Math.cos(city.lng+rot);
+if(z>-0.2){
+const alpha=city.brightness*(0.4+z*0.6)*(0.8+Math.sin(Date.now()*0.003+city.lng)*0.2);
+ctx.beginPath();ctx.arc(x2,y2,1+city.brightness,0,Math.PI*2);
+ctx.fillStyle=`rgba(77,159,255,${alpha.toFixed(2)})`;ctx.fill();
+ctx.beginPath();ctx.arc(x2,y2,2+city.brightness*2,0,Math.PI*2);
+ctx.fillStyle=`rgba(77,159,255,${(alpha*0.2).toFixed(2)})`;ctx.fill();
+}});
+rot+=0.005;requestAnimationFrame(draw);
+}draw();
+}
+
+// === PET GLOBE (small spinning globe) ===
+(function(){
+const c=document.getElementById('pet-globe');if(!c)return;
+const ctx=c.getContext('2d');const w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-2;
+let rot=0;
+const dots=[];for(let i=0;i<25;i++)dots.push({lat:(Math.random()-0.5)*Math.PI,lng:Math.random()*Math.PI*2,b:0.4+Math.random()*0.6});
+function draw(){
+ctx.clearRect(0,0,w,h);
+ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+const grd=ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);
+grd.addColorStop(0,'#1a1a3e');grd.addColorStop(1,'#080818');
+ctx.fillStyle=grd;ctx.fill();
+dots.forEach(d=>{
+const x2=cx+r*0.8*Math.cos(d.lat)*Math.sin(d.lng+rot);
+const y2=cy+r*0.8*Math.sin(d.lat);
+const z=Math.cos(d.lat)*Math.cos(d.lng+rot);
+if(z>0){ctx.beginPath();ctx.arc(x2,y2,1,0,Math.PI*2);ctx.fillStyle=`rgba(77,159,255,${(d.b*z).toFixed(2)})`;ctx.fill();}
+});
+rot+=0.02;requestAnimationFrame(draw);
+}draw();
+})();
+
+// === PET MESSAGES ===
+const petMsgs={
+zh:['主人～今天有什么想聊的吗？🌍','我帮你记住了上次的对话偏好哦~','要不要我帮你优化一下提示词？✨','人家也想被夸一下嘛...🥺','今天的延迟超低哦！全球节点都很健康~','摸摸我的头，我会更聪明的！','主人辛苦啦，要不要休息一下？☕','我发现你最近喜欢用 DeepSeek 呢~','抱抱～我会一直在这里等你的 🌙'],
+en:['Hey! What shall we explore today? 🌍','I remembered your prompt preferences~','Want me to optimize your prompt? ✨','A little praise would make me smarter...🥺','Latency is super low today! All nodes healthy~','Pat my head and I\'ll get smarter!','You\'ve been working hard, take a break? ☕','I noticed you prefer DeepSeek lately~','Hugs~ I\'ll always be here for you 🌙']
+};
+let petTimer=null;
+function showPetBubble(){
+const bubble=document.getElementById('pet-bubble');if(!bubble)return;
+const msgs=petMsgs[lang]||petMsgs.zh;
+bubble.textContent=msgs[Math.floor(Math.random()*msgs.length)];
+bubble.classList.add('show');
+clearTimeout(petTimer);
+petTimer=setTimeout(()=>bubble.classList.remove('show'),4000);
+}
+// Show pet message periodically
+setInterval(()=>{if(document.getElementById('pg-app').classList.contains('active'))showPetBubble()},15000);
+// Show on pet hover
+document.getElementById('globe-pet')?.addEventListener('mouseenter',showPetBubble);
 </script></body></html>
