@@ -118,6 +118,50 @@ button{font-family:inherit;cursor:pointer}input,textarea{font-family:inherit}
 /* Toast */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:8px;padding:10px 20px;font-size:12px;z-index:9999;transition:.3s}
 .toast.show{transform:translateX(-50%) translateY(0)}
+
+/* AI Console */
+.ai-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9997;box-shadow:0 4px 24px rgba(77,159,255,0.5),0 4px 24px rgba(168,85,247,0.3);transition:transform .3s;animation:fabPulse 3s infinite}
+.ai-fab:hover{transform:scale(1.08) rotate(5deg)}
+@keyframes fabPulse{0%,100%{box-shadow:0 4px 24px rgba(77,159,255,0.5),0 4px 24px rgba(168,85,247,0.3)}50%{box-shadow:0 4px 40px rgba(77,159,255,0.7),0 4px 40px rgba(168,85,247,0.5)}}
+.ai-fab svg{width:26px;height:26px;fill:#fff}
+.ai-fab.hide{display:none}
+.ai-console{position:fixed;bottom:24px;right:24px;width:420px;max-width:calc(100vw - 48px);height:560px;max-height:calc(100vh - 48px);background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:16px;z-index:9998;display:none;flex-direction:column;overflow:hidden;box-shadow:0 10px 60px rgba(0,0,0,0.6),0 0 40px rgba(77,159,255,0.2);animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ai-console.on{display:flex}
+.ai-hd{padding:14px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,rgba(77,159,255,0.08),rgba(168,85,247,0.08))}
+.ai-hd-left{display:flex;align-items:center;gap:8px}
+.ai-hd-icon{width:28px;height:28px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center}
+.ai-hd-icon svg{width:16px;height:16px;fill:#fff}
+.ai-hd-title{font-size:13px;font-weight:700}
+.ai-hd-status{font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px}
+.ai-hd-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-close{background:transparent;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px}
+.ai-close:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+.ai-body{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.ai-msg{max-width:90%;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;word-break:break-word}
+.ai-msg.user{background:rgba(77,159,255,0.12);align-self:flex-end;border-bottom-right-radius:2px}
+.ai-msg.bot{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);align-self:flex-start;border-bottom-left-radius:2px}
+.ai-msg.system{background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);align-self:center;text-align:center;font-size:11px;color:var(--green);max-width:95%}
+.ai-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 10px}
+.ai-chip{padding:4px 10px;border-radius:12px;font-size:10px;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);color:var(--blue);cursor:pointer;transition:.2s;white-space:nowrap}
+.ai-chip:hover{background:rgba(77,159,255,0.15);transform:translateY(-1px)}
+.ai-input-bar{padding:12px 14px;border-top:1px solid var(--glass-border);display:flex;gap:8px;align-items:center;background:rgba(0,0,0,0.2)}
+.ai-input-bar input{flex:1;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:8px;color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:.2s}
+.ai-input-bar input:focus{border-color:var(--blue);box-shadow:0 0 10px rgba(77,159,255,0.2)}
+.ai-send{padding:10px 12px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ai-send:hover{box-shadow:0 2px 12px rgba(77,159,255,0.4)}
+.ai-send svg{width:12px;height:12px;fill:#fff}
+@media(max-width:600px){.ai-console{width:calc(100vw - 24px);right:12px;bottom:12px;height:calc(100vh - 100px)}}
+
+/* Theme colors */
+body.theme-red{--blue:#ef4444;--purple:#f97316;--gradient:linear-gradient(135deg,#ef4444,#f97316);--glow:0 0 20px rgba(239,68,68,0.3)}
+body.theme-green{--blue:#22c55e;--purple:#10b981;--gradient:linear-gradient(135deg,#22c55e,#10b981);--glow:0 0 20px rgba(34,197,94,0.3)}
+body.theme-pink{--blue:#ec4899;--purple:#f43f5e;--gradient:linear-gradient(135deg,#ec4899,#f43f5e);--glow:0 0 20px rgba(236,72,153,0.3)}
+body.theme-orange{--blue:#f97316;--purple:#eab308;--gradient:linear-gradient(135deg,#f97316,#eab308);--glow:0 0 20px rgba(249,115,22,0.3)}
+body.theme-cyan{--blue:#06b6d4;--purple:#3b82f6;--gradient:linear-gradient(135deg,#06b6d4,#3b82f6);--glow:0 0 20px rgba(6,182,212,0.3)}
+body.light-mode{--bg:#f3f4f6;--sidebar:#ffffff;--panel:#ffffff;--glass:rgba(255,255,255,0.7);--glass-border:rgba(0,0,0,0.08);--text:#0f172a;--dim:#64748b}
+body.light-mode .grid-bg{background-image:linear-gradient(rgba(77,159,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(77,159,255,0.04) 1px,transparent 1px)}
 </style></head><body>
 <canvas id="bg-canvas"></canvas><div class="grid-bg"></div>
 <div class="lang-sw"><button class="on" onclick="setLang('zh')">中文</button><button onclick="setLang('en')">EN</button></div>
@@ -152,6 +196,31 @@ button{font-family:inherit;cursor:pointer}input,textarea{font-family:inherit}
 <div class="tab-body" id="tab-settings"></div>
 </div></div>
 <div class="toast" id="toast"></div>
+
+<!-- AI Console FAB -->
+<div class="ai-fab" id="ai-fab" onclick="toggleAiConsole()" title="AI Console">
+<svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm1-13h-2v4H7v2h4v4h2v-4h4v-2h-4V7z"/></svg>
+</div>
+
+<!-- AI Console Panel -->
+<div class="ai-console" id="ai-console">
+<div class="ai-hd">
+<div class="ai-hd-left">
+<div class="ai-hd-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+<div>
+<div class="ai-hd-title" id="ai-title">AI 控制台</div>
+<div class="ai-hd-status" id="ai-status">在线</div>
+</div>
+</div>
+<button class="ai-close" onclick="toggleAiConsole()">×</button>
+</div>
+<div class="ai-body" id="ai-body"></div>
+<div class="ai-suggest" id="ai-suggest"></div>
+<div class="ai-input-bar">
+<input id="ai-input" placeholder="输入自然语言指令..." onkeydown="if(event.key==='Enter')sendAi()">
+<button class="ai-send" onclick="sendAi()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg><span id="ai-send-text">发送</span></button>
+</div>
+</div>
 <script>
 // === I18N ===
 const L={
@@ -349,4 +418,152 @@ requestAnimationFrame(loop)}loop()})();
 
 // Enter key
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('pg-login').classList.contains('active'))doLogin()});
+
+// ==================== AI CONSOLE ====================
+// 自然语言指令解析器 - 通过 AI 控制台修改 UI
+const AI_L={
+zh:{title:'AI 控制台',status:'在线',ph:'输入自然语言指令...',send:'发送',welcome:'👋 你好！我是 RelayOS AI 控制台。\n\n试试这些指令：\n• 切换到英文\n• 主题颜色改成红色\n• 跳转到聊天页\n• 切换到浅色模式\n• 添加一个新卡片\n\n支持中英文自由混合！',
+unknown:'🤔 不太理解这个指令。可以试试：切换主题、跳转页面、切换语言、修改颜色等。',
+execDone:'✓ 已执行：',langSwitched:'已切换到',themeChanged:'主题已更改',nav:'已跳转到',lightOn:'已切换到浅色模式',darkOn:'已切换到深色模式',logoutDone:'已退出登录',cardAdded:'已添加新卡片到当前页面',chatSent:'已在对话中发送消息',confetti:'🎉 彩蛋触发！',reset:'已重置为默认主题',help:'可用指令：\n1. 切换语言: 切换到英文/中文\n2. 修改主题: 主题改成红色/蓝色/绿色/粉色/橙色/青色\n3. 跳转页面: 去首页/对话/社区/绘画/视频/知识库/记忆/任务/设置\n4. 切换模式: 浅色模式/深色模式\n5. 添加卡片: 添加一个新卡片\n6. 发送消息: 在聊天中发送 xxx\n7. 退出登录: 退出/注销\n8. 重置: 重置主题\n9. 彩蛋: 烟花/confetti'},
+en:{title:'AI Console',status:'Online',ph:'Type a natural command...',send:'Send',welcome:'👋 Hi! I am the RelayOS AI Console.\n\nTry these commands:\n• Switch to Chinese\n• Change theme to red\n• Go to chat page\n• Switch to light mode\n• Add a new card\n\nBoth Chinese and English supported!',
+unknown:'🤔 I don\'t understand. Try: switch theme, navigate, change language, etc.',
+execDone:'✓ Done: ',langSwitched:'Switched to',themeChanged:'Theme changed to',nav:'Navigated to',lightOn:'Switched to light mode',darkOn:'Switched to dark mode',logoutDone:'Logged out',cardAdded:'Added new card to current page',chatSent:'Sent message in chat',confetti:'🎉 Easter egg!',reset:'Theme reset to default',help:'Available commands:\n1. Switch language: switch to English/Chinese\n2. Change theme: red/blue/green/pink/orange/cyan\n3. Navigate: go to home/chat/community/image/video/knowledge/memory/tasks/settings\n4. Toggle mode: light/dark mode\n5. Add card: add a new card\n6. Send message: send "xxx" in chat\n7. Logout: logout\n8. Reset: reset theme\n9. Easter egg: confetti/fireworks'}
+};
+function aiT(k){return AI_L[lang][k]||k}
+
+let aiHistory=[];
+
+function toggleAiConsole(){
+const fab=document.getElementById('ai-fab'),panel=document.getElementById('ai-console');
+if(panel.classList.contains('on')){panel.classList.remove('on');fab.classList.remove('hide')}
+else{panel.classList.add('on');fab.classList.add('hide');
+if(aiHistory.length===0){addAiMsg('bot',aiT('welcome'));refreshSuggestions()}
+setTimeout(()=>document.getElementById('ai-input').focus(),100)}
+}
+
+function updateAiConsoleUI(){
+document.getElementById('ai-title').textContent=aiT('title');
+document.getElementById('ai-status').textContent=aiT('status');
+document.getElementById('ai-input').placeholder=aiT('ph');
+document.getElementById('ai-send-text').textContent=aiT('send');
+refreshSuggestions();
+}
+
+function refreshSuggestions(){
+const sg=document.getElementById('ai-suggest');
+const suggestions=lang==='zh'
+?['主题改成红色','跳转到聊天','切换到英文','浅色模式','添加新卡片','帮助']
+:['Change theme to red','Go to chat','Switch to Chinese','Light mode','Add a card','Help'];
+sg.innerHTML=suggestions.map(s=>`<div class="ai-chip" onclick="document.getElementById('ai-input').value='${s}';sendAi()">${s}</div>`).join('');
+}
+
+function addAiMsg(type,text){
+const body=document.getElementById('ai-body');
+const msg=document.createElement('div');
+msg.className='ai-msg '+type;
+msg.textContent=text;
+body.appendChild(msg);
+body.scrollTop=body.scrollHeight;
+aiHistory.push({type,text});
+}
+
+function sendAi(){
+const input=document.getElementById('ai-input');
+const cmd=input.value.trim();if(!cmd)return;
+addAiMsg('user',cmd);input.value='';
+setTimeout(()=>processAiCommand(cmd),300);
+}
+
+// 核心：自然语言指令解析与执行
+function processAiCommand(raw){
+const cmd=raw.toLowerCase().trim();
+let executed=false,response='';
+
+// 1. 语言切换
+if(/英文|english|切换.*英|switch.*english|en语言/i.test(cmd)){setLang('en');response=aiT('langSwitched')+' English';executed=true}
+else if(/中文|chinese|切换.*中|switch.*chinese|zh语言/i.test(cmd)){setLang('zh');response=aiT('langSwitched')+' 中文';executed=true}
+
+// 2. 主题颜色
+else if(/红色|red/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-red';response=aiT('themeChanged')+' 🔴';executed=true}
+else if(/绿色|green/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-green';response=aiT('themeChanged')+' 🟢';executed=true}
+else if(/粉|pink/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-pink';response=aiT('themeChanged')+' 🌸';executed=true}
+else if(/橙|orange|yellow|黄/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-orange';response=aiT('themeChanged')+' 🟠';executed=true}
+else if(/青|cyan|蓝绿/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'')+' theme-cyan';response=aiT('themeChanged')+' 🧊';executed=true}
+else if(/蓝|blue|紫|purple|默认|default|重置|reset/i.test(cmd)){document.body.className=document.body.className.replace(/theme-\w+/g,'');response=aiT('reset');executed=true}
+
+// 3. 浅色/深色模式
+else if(/浅色|light.*mode|白色|light|白天/i.test(cmd)){document.body.classList.add('light-mode');response=aiT('lightOn');executed=true}
+else if(/深色|dark.*mode|黑色|dark|暗/i.test(cmd)){document.body.classList.remove('light-mode');response=aiT('darkOn');executed=true}
+
+// 4. 页面导航
+else if(/首页|home/i.test(cmd)){go('home');response=aiT('nav')+' 首页/Home';executed=true}
+else if(/聊天|对话|chat|conversation/i.test(cmd)){go('chat');response=aiT('nav')+' 对话/Chat';executed=true}
+else if(/社区|community|市场|market|发现|discover/i.test(cmd)){go('community');response=aiT('nav')+' 社区/Community';executed=true}
+else if(/视频|video/i.test(cmd)){go('video');response=aiT('nav')+' 视频/Video';executed=true}
+else if(/图像|绘画|image|paint|draw/i.test(cmd)){go('image');response=aiT('nav')+' 绘画/Image';executed=true}
+else if(/知识库|文件|resource|knowledge|file/i.test(cmd)){go('resource');response=aiT('nav')+' 知识库/Resource';executed=true}
+else if(/记忆|memory/i.test(cmd)){go('memory');response=aiT('nav')+' 记忆/Memory';executed=true}
+else if(/任务|task/i.test(cmd)){go('tasks');response=aiT('nav')+' 任务/Tasks';executed=true}
+else if(/设置|setting|config/i.test(cmd)){go('settings');response=aiT('nav')+' 设置/Settings';executed=true}
+
+// 5. 添加卡片
+else if(/添加.*卡|add.*card|新卡片|new card/i.test(cmd)){
+const activeTab=document.querySelector('.tab-body.on');
+if(activeTab){
+const card=document.createElement('div');card.className='card';card.style.animation='fadeUp .4s ease';card.style.borderColor='rgba(77,159,255,0.4)';
+card.innerHTML=`<div class="card-title">✨ ${lang==='zh'?'AI 生成的卡片':'AI-Generated Card'}</div><div class="card-desc">${lang==='zh'?'通过 AI 控制台指令创建于 '+new Date().toLocaleTimeString():'Created via AI console at '+new Date().toLocaleTimeString()}</div><div style="margin-top:8px"><span class="tag purple">AI</span><span class="tag green">New</span></div>`;
+activeTab.appendChild(card);response=aiT('cardAdded');executed=true;}
+}
+
+// 6. 发送聊天消息
+else if(/发送.*消息|在聊天|send.*message|send.*chat/i.test(cmd)){
+go('chat');
+setTimeout(()=>{
+const match=raw.match(/["'""'](.+?)["'""']/);const msgText=match?match[1]:(lang==='zh'?'来自 AI 控制台的消息':'Hello from AI Console');
+const inp=document.getElementById('chat-in');if(inp){inp.value=msgText;sendMsg();}
+},300);
+response=aiT('chatSent');executed=true;
+}
+
+// 7. 退出登录
+else if(/退出|登出|注销|logout|log.*out|sign.*out/i.test(cmd)){logout();response=aiT('logoutDone');executed=true}
+
+// 8. 彩蛋 - 撒花效果
+else if(/烟花|彩蛋|confetti|firework|celebrate|庆祝|festival/i.test(cmd)){launchConfetti();response=aiT('confetti');executed=true}
+
+// 9. 帮助
+else if(/帮助|help|指令|command|支持|support|能做什么/i.test(cmd)){response=aiT('help');executed=true}
+
+// 10. 模糊问候
+else if(/你好|hi|hello|hey|嗨/i.test(cmd)){response=lang==='zh'?'你好！我能帮你修改 UI 主题、切换语言、跳转页面等。输入"帮助"查看全部指令。':'Hi! I can change UI theme, switch language, navigate pages. Type "help" for all commands.';executed=true}
+
+if(executed){
+if(response.startsWith(aiT('execDone'))||response.includes('\n')||response.startsWith('🎉')||response.startsWith('👋')){addAiMsg('bot',response);}
+else{addAiMsg('system',aiT('execDone')+response);}
+}else{
+addAiMsg('bot',aiT('unknown'));
+}
+refreshSuggestions();
+}
+
+// 彩蛋：撒花
+function launchConfetti(){
+const colors=['#4d9fff','#a855f7','#22d3ee','#22c55e','#f97316','#ec4899'];
+for(let i=0;i<60;i++){
+const p=document.createElement('div');
+p.style.cssText=`position:fixed;top:${Math.random()*20}%;left:${Math.random()*100}%;width:8px;height:8px;background:${colors[i%colors.length]};border-radius:50%;z-index:10000;pointer-events:none;animation:confettiFall ${2+Math.random()*2}s ease-out forwards;transform:rotate(${Math.random()*360}deg)`;
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),4000);
+}
+}
+
+// 在 CSS 中追加 confetti 动画
+(function(){const st=document.createElement('style');
+st.textContent='@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}';
+document.head.appendChild(st);})();
+
+// 初始化 AI 控制台 UI
+setTimeout(updateAiConsoleUI,50);
+// 修改 setLang 以同步更新 AI 控制台
+const _origSetLang=setLang;window.setLang=function(l){_origSetLang(l);updateAiConsoleUI();};
 </script></body></html>
