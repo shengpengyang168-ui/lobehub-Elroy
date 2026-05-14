@@ -1036,10 +1036,10 @@ function DashHome({ t, isDark }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Hero Title + Globe */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-          <div>
-            <h1 style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.1, marginBottom: '12px' }}>
-              <span style={{ color: s.text }}>One Relay.</span><br/>
-              <span style={{ background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Every Model.</span>
+          <div style={{ minWidth: 420 }}>
+            <h1 style={{ fontSize: 52, fontWeight: 800, lineHeight: 1.1, marginBottom: '12px', whiteSpace: 'nowrap' }}>
+              <span style={{ color: s.text, display: 'block' }}>One Relay.</span>
+              <span style={{ display: 'block', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Every Model.</span>
             </h1>
             <p style={{ fontSize: 15, color: s.textSecondary, maxWidth: 400 }}>{homeT.subtitle}</p>
           </div>
