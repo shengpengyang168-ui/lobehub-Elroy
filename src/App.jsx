@@ -931,17 +931,17 @@ function Sidebar({ t, isDark, activeTab, setActiveTab, onLogout }) {
 
   return (
     <aside style={{ width: 220, height: '100vh', position: 'fixed', left: 0, top: 0, background: s.sidebarBg, borderRight: `1px solid ${s.sidebarBorder}`, display: 'flex', flexDirection: 'column', padding: '8px 12px', zIndex: 50 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', height: 64 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 12px', height: 56 }}>
         <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15 }}>R</div>
         <span style={{ fontWeight: 700, fontSize: 17, color: s.text }}>RelayOS</span>
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', marginTop: 8 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, marginTop: 0 }}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '12px', height: 44, padding: '0 12px', borderRadius: '8px',
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderRadius: '8px',
                 border: 'none', borderLeft: isActive ? '3px solid #7c5cbf' : '3px solid transparent',
                 background: isActive ? s.selectedBg : 'transparent',
                 color: isActive ? s.selectedText : s.textSecondary,
