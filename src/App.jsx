@@ -930,12 +930,12 @@ function Sidebar({ t, isDark, activeTab, setActiveTab, onLogout }) {
   ];
 
   return (
-    <aside style={{ width: 220, height: '100vh', position: 'fixed', left: 0, top: 0, background: s.sidebarBg, borderRight: `1px solid ${s.sidebarBorder}`, display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', marginBottom: '28px' }}>
+    <aside style={{ width: 220, height: '100vh', position: 'fixed', left: 0, top: 0, background: s.sidebarBg, borderRight: `1px solid ${s.sidebarBorder}`, display: 'flex', flexDirection: 'column', padding: '8px 12px', zIndex: 50 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', height: 64 }}>
         <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15 }}>R</div>
         <span style={{ fontWeight: 700, fontSize: 17, color: s.text }}>RelayOS</span>
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', marginTop: 8 }}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -1043,8 +1043,19 @@ function DashHome({ t, isDark }) {
             </h1>
             <p style={{ fontSize: 15, color: s.textSecondary, maxWidth: 400 }}>{homeT.subtitle}</p>
           </div>
-          <div style={{ flexShrink: 0 }}>
-            <Globe3D />
+          <div style={{ position: 'relative', width: 360, height: 360, flexShrink: 0 }}>
+            {/* 外层光晕 */}
+            <div style={{ position: 'absolute', inset: -20, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%)' }} />
+            {/* 地球主体 */}
+            <div style={{ width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #1a3a6e, #0a1628 60%, #050d1a)', border: '1px solid rgba(79,142,247,0.3)', boxShadow: '0 0 40px rgba(79,142,247,0.2), inset 0 0 60px rgba(0,0,0,0.5)', overflow: 'hidden', position: 'relative' }}>
+              <svg width="360" height="360" style={{ position: 'absolute', inset: 0, opacity: 0.25 }}>
+                {[60,90,120,150,180,210,240,270,300].map(y => <ellipse key={`lat${y}`} cx="180" cy={y} rx="170" ry="18" fill="none" stroke="#4f8ef7" strokeWidth="0.8" />)}
+                {[0,40,80,120,160,200,240,280,320].map(angle => <ellipse key={`lng${angle}`} cx="180" cy="180" rx={Math.abs(Math.cos(angle * Math.PI / 180) * 170)} ry="170" fill="none" stroke="#4f8ef7" strokeWidth="0.8" />)}
+              </svg>
+              <div style={{ position: 'absolute', top: 40, left: 60, width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.08), transparent)' }} />
+            </div>
+            {/* 轨道环 */}
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotateX(75deg)', width: 420, height: 420, borderRadius: '50%', border: '1px solid rgba(79,142,247,0.2)' }} />
           </div>
         </div>
 
