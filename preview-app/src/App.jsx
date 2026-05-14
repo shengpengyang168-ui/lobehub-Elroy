@@ -1,849 +1,1683 @@
-import React, { useState, useEffect, useRef, createContext, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
-// ============ CONTEXT ============
-const AppContext = createContext();
-const useApp = () => useContext(AppContext);
-
-// ============ i18n ============
-const i18n = {
+// ============ i18n Translations ============
+const translations = {
   zh: {
-    login: "登录", email: "邮箱地址", password: "密码", loginBtn: "登录 RelayOS",
-    socialTitle: "快速登录", github: "GitHub", google: "Google", sso: "SSO 登录",
-    noAccount: "没有账户？", register: "注册",
-    nav: ["首页","控制台","任务","模型","路由","用量","价格对比","FAQ","设置"],
-    upgrade: "升级套餐", expire: "到期", plan: "Pro 套餐",
-    sysStatus: "系统状态", allOps: "全部正常运行",
-    liveOverview: "实时系统总览", activeNodes: "活跃节点", onlineModels: "在线模型",
-    avgLatency: "平均延迟", successRate: "成功率",
-    recentActivity: "近期活动", sysLogs: "系统日志", viewAll: "查看全部",
-    devRes: "开发者资源", apiDocs: "API 文档",
-    heroTitle1: "One Relay.", heroTitle2: "Every Model.",
-    heroSub: "统一接入前沿 AI 系统的中继层",
-    uptime: "在线率", models: "模型数", latencyLabel: "平均延迟", nodesLabel: "活跃节点",
-    apiConsole: "API 控制台", provider: "供应商", model: "模型", strategy: "策略",
-    connected: "已连接", typeReq: "输入你的请求... ( ⌘ + ↵ 发送 )",
-    topology: "AI 路由拓扑", liveTraffic: "● 实时流量",
-    subLatency: "亚300ms", globalRelay: "全球中继",
-    encrypted: "全程加密", e2e: "端对端",
-    adaptive: "自适应", loadBal: "负载均衡",
-    consolePage: "API 控制台", taskPage: "任务管理", modelPage: "模型管理",
-    routePage: "路由配置", usagePage: "用量统计", settingsPage: "设置",
-    pricingPage: "价格对比", faqPage: "常见问题",
-    todo: "待处理", progress: "进行中", done: "已完成",
-    totalModels: "共", modelsUnit: "个模型", onlineUnit: "个在线",
-    addRoute: "+ 添加路由规则", routeRules: "路由规则列表",
-    totalReq: "总请求量", totalTokens: "总Token数", avgLat: "平均延迟", totalCost: "总费用",
-    dailyVol: "每日请求量", modelBreakdown: "模型用量分布",
-    profile: "个人信息", username: "用户名", emailLabel: "邮箱", org: "组织", role: "角色",
-    saveChanges: "保存更改", preferences: "偏好设置",
-    darkMode: "深色模式", darkDesc: "使用深色主题界面",
-    notifications: "通知提醒", notiDesc: "接收系统通知和告警",
-    twoFactor: "两步验证", tfDesc: "增强账户安全性",
-    apiKeys: "API 密钥", copy: "复制", genKey: "+ 生成新密钥",
-    dangerZone: "危险区域", deleteAccount: "删除账户",
-    deleteDesc: "此操作不可撤销，所有数据将被永久删除",
-    upgradeTitle: "选择套餐", monthly: "月付", yearly: "年付（省20%）",
-    starterPlan: "Starter", proPlan: "Pro", starterPrice: "¥0", proPrice: "¥199",
-    starterPriceY: "¥0", proPriceY: "¥1,908",
-    perMonth: "/月", perYear: "/年",
-    starterFeatures: ["5个模型","1K请求/天","社区支持","基础路由"],
-    proFeatures: ["48+模型","无限请求","优先支持","高级路由","API密钥管理","团队协作"],
-    currentPlan: "当前套餐", choosePlan: "选择此套餐",
-    freePlan: "免费版", enterprisePlan: "企业版",
-    freePrice: "¥0", enterprisePrice: "联系我们",
-    freeFeatures: ["5个基础模型","每日1,000请求","社区支持","基础路由策略","单用户"],
-    proFeaturesP: ["48+全部模型","无限请求","优先技术支持","高级路由策略","API密钥管理","最多5人团队"],
-    enterpriseFeatures: ["全部模型+私有部署","无限请求+SLA保障","24/7专属支持","自定义路由策略","SSO单点登录","无限团队成员"],
-    proPriceP: "¥199", proPricePY: "¥159",
-    modelPricing: "模型价格对比", officialPrice: "官方价格", relayPrice: "RelayOS价格",
-    savings: "节省", inputPrice: "输入", outputPrice: "输出",
-    faqItems: [
-      { q: "RelayOS 是什么？", a: "RelayOS 是一个统一的 AI 模型 API 网关，提供智能路由、负载均衡、故障转移等功能。通过一个 API 端点，您可以访问 48+ 种前沿 AI 模型，包括 GPT-4o、Claude 3.5、Gemini 1.5 Pro 等。" },
-      { q: "如何开始使用？", a: "注册账户后，您将获得一个 API 密钥。只需将现有的 OpenAI API 调用端点替换为 RelayOS 端点即可。我们兼容 OpenAI API 格式，迁移零成本。" },
-      { q: "支持哪些 AI 模型？", a: "我们支持 OpenAI（GPT-4o、GPT-4-turbo）、Anthropic（Claude 3.5 Sonnet、Claude 3 Haiku）、Google（Gemini 1.5 Pro）、DeepSeek（V4 Pro）、Meta（Llama 3.1）、Mistral（Mixtral 8x22B）等 48+ 种模型。" },
-      { q: "价格如何计算？", a: "我们按实际使用的 Token 数量计费，价格比官方低 10-30%。免费套餐每日 1,000 次请求，Pro 套餐月付 ¥199 起，企业套餐可定制。" },
-      { q: "数据安全如何保障？", a: "所有 API 请求均通过 TLS 1.3 加密传输。我们不存储任何请求内容，仅保留元数据用于计费和监控。通过 SOC 2 Type II 认证，符合 GDPR 合规要求。" },
-      { q: "如何实现智能路由？", a: "RelayOS 支持多种路由策略：加权轮询、最低延迟、故障转移、按成本优化等。您可以为不同类型的请求配置不同的路由规则，实现最优的性能和成本平衡。" },
-    ],
-    copied: "已复制!", generated: "新密钥已生成!",
+    nav: { home: '首页', features: '特性', models: '模型', pricing: '定价', docs: '文档' },
+    hero: {
+      brand: 'RelayOS',
+      title: '下一代 AI 基础设施平台',
+      subtitle: '统一管理多模型路由、Token 计费与 API 网关，为企业和开发者提供高效、安全的 AI 中继服务',
+      start: '立即开始',
+      viewDocs: '查看文档',
+    },
+    features: {
+      title: '核心特性',
+      subtitle: '全方位 AI 基础设施解决方案',
+      items: [
+        { title: '智能路由', desc: '自动选择最优模型路径，负载均衡与故障转移' },
+        { title: '统一 API', desc: '一个接口接入所有主流大模型，OpenAI 兼容格式' },
+        { title: 'Token 计费', desc: '精确到 Token 级别的用量统计与费用追踪' },
+        { title: '多模型支持', desc: '支持 GPT-4o、Claude、Gemini、DeepSeek 等 50+ 模型' },
+        { title: '安全网关', desc: '企业级 API 密钥管理、速率限制与访问控制' },
+        { title: '实时监控', desc: '全链路请求追踪、延迟分析与告警通知' },
+      ],
+    },
+    models: {
+      title: '支持模型',
+      subtitle: '接入全球主流 AI 模型提供商',
+      list: ['GPT-4o', 'GPT-4o-mini', 'Claude 3.5 Sonnet', 'Claude 3 Opus', 'Gemini 1.5 Pro', 'DeepSeek V3', 'Qwen 2.5', 'Llama 3.1', 'Mistral Large', 'Yi-Large'],
+    },
+    pricing: {
+      title: '灵活定价',
+      subtitle: '按需选择，透明计费',
+      partA: {
+        title: '对话套餐',
+        subtitle: '按月订阅，享受对话额度',
+        plans: [
+          { name: '免费版', price: '¥0', period: '/月', quota: '100 次对话', multiplier: '1x 速率', features: ['基础模型访问', '标准响应速度', '社区支持'] },
+          { name: '专业版', price: '¥99', period: '/月', quota: '5,000 次对话', multiplier: '2x 速率', features: ['全部模型访问', '优先响应速度', '邮件支持', 'API 访问'] },
+          { name: '企业版', price: '¥499', period: '/月', quota: '无限对话', multiplier: '5x 速率', features: ['全部模型访问', '最快响应速度', '专属客服', '自定义部署', 'SLA 保障'] },
+        ],
+      },
+      partB: {
+        title: 'API Token 计费',
+        subtitle: '按实际消耗计费，用多少付多少',
+        headers: ['模型', '输入价格', '输出价格'],
+        rows: [
+          ['GPT-4o', '¥0.04/1K tokens', '¥0.12/1K tokens'],
+          ['GPT-4o-mini', '¥0.002/1K tokens', '¥0.008/1K tokens'],
+          ['Claude 3.5 Sonnet', '¥0.03/1K tokens', '¥0.15/1K tokens'],
+          ['DeepSeek V3', '¥0.001/1K tokens', '¥0.002/1K tokens'],
+          ['Gemini 1.5 Pro', '¥0.025/1K tokens', '¥0.075/1K tokens'],
+        ],
+      },
+    },
+    footer: {
+      brand: 'RelayOS',
+      desc: '下一代 AI 基础设施平台',
+      product: '产品',
+      resources: '资源',
+      company: '公司',
+      links: { console: '控制台', api: 'API 文档', status: '服务状态', docs: '开发文档', blog: '博客', community: '社区', about: '关于我们', careers: '加入我们', contact: '联系我们' },
+      copyright: '© 2024 RelayOS. All rights reserved.',
+    },
+    login: {
+      title: '欢迎回来',
+      subtitle: '登录您的 RelayOS 账户',
+      email: '邮箱地址',
+      password: '密码',
+      btn: '登录',
+      noAccount: '没有账户？',
+      register: '立即注册',
+      forgot: '忘记密码？',
+    },
+    register: {
+      title: '创建账户',
+      subtitle: '开启您的 AI 之旅',
+      name: '用户名',
+      email: '邮箱地址',
+      password: '密码',
+      confirm: '确认密码',
+      btn: '注册',
+      hasAccount: '已有账户？',
+      login: '去登录',
+    },
+    sidebar: {
+      home: '首页',
+      console: '控制台',
+      imageGen: '生图',
+      usage: '用量',
+      models: '模型',
+      routing: '路由',
+      settings: '设置',
+    },
+    dashboard: {
+      home: {
+        welcome: '欢迎使用 RelayOS',
+        heroTitle1: 'One Relay.',
+        heroTitle2: 'Every Model.',
+        subtitle: '统一 AI 模型路由 · 智能负载均衡 · 企业级安全网关',
+        stats: [
+          { label: '正常运行', value: '99.99', unit: '%', icon: 'uptime' },
+          { label: '可用模型', value: '48', unit: '+', icon: 'models' },
+          { label: '平均延迟', value: '287', unit: 'ms', icon: 'latency' },
+        ],
+        systemOverview: '系统概览',
+        activeNodes: '活跃节点',
+        onlineModels: '在线模型',
+        avgLatency: '平均延迟',
+        successRate: '成功率',
+        recentActivity: '近期活动',
+        systemLogs: '系统日志',
+        devResources: '开发者资源',
+        apiDocs: 'API 文档',
+        sdkGuide: 'SDK 指南',
+      },
+      console: {
+        placeholder: '输入消息...',
+        send: '发送',
+        selectModel: '选择模型',
+      },
+      imageGen: {
+        title: 'AI 图像生成',
+        prompt: '输入图像描述',
+        generate: '生成图像',
+        size: '尺寸',
+        style: '风格',
+        styles: ['写实', '动漫', '油画', '水彩', '像素'],
+      },
+      usage: {
+        title: '用量统计',
+        remaining: '剩余对话额度',
+        used: '已使用',
+        total: '总额度',
+        logs: 'API 调用日志',
+        headers: ['时间', '模型', '类型', 'Token 数', '状态', '延迟'],
+        tokenToday: '今日 Token 使用',
+        apiToday: '今日 API 调用',
+      },
+      models: {
+        title: '模型管理',
+        enabled: '已启用',
+        disabled: '已禁用',
+        configure: '配置',
+      },
+      routing: {
+        title: '路由策略',
+        rules: '路由规则',
+        addRule: '添加规则',
+        priority: '优先级',
+        condition: '条件',
+        target: '目标模型',
+      },
+      settings: {
+        title: '系统设置',
+        apiKey: 'API 密钥',
+        generate: '生成新密钥',
+        webhook: 'Webhook URL',
+        rateLimit: '速率限制',
+        save: '保存设置',
+      },
+    },
+    topbar: {
+      status: '所有系统运行正常',
+    },
+    theme: { light: '浅色', dark: '深色' },
+    lang: { zh: '中文', en: 'English' },
+    loginBtn: '登录',
+    registerBtn: '注册',
+    logout: '退出登录',
   },
   en: {
-    login: "Login", email: "Email Address", password: "Password", loginBtn: "Login to RelayOS",
-    socialTitle: "Quick Login", github: "GitHub", google: "Google", sso: "SSO Login",
-    noAccount: "No account?", register: "Sign Up",
-    nav: ["Home","Console","Tasks","Models","Routing","Usage","Pricing","FAQ","Settings"],
-    upgrade: "Upgrade Plan", expire: "expires", plan: "Pro Plan",
-    sysStatus: "System Status", allOps: "All Systems Operational",
-    liveOverview: "Live System Overview", activeNodes: "Active Nodes", onlineModels: "Online Models",
-    avgLatency: "Avg Latency", successRate: "Success Rate",
-    recentActivity: "Recent Activity", sysLogs: "System Logs", viewAll: "View All",
-    devRes: "Developer Resources", apiDocs: "API Docs",
-    heroTitle1: "One Relay.", heroTitle2: "Every Model.",
-    heroSub: "Unified access layer for frontier AI systems.",
-    uptime: "Uptime", models: "Models", latencyLabel: "Avg Latency", nodesLabel: "Active Nodes",
-    apiConsole: "API Console", provider: "Provider", model: "Model", strategy: "Strategy",
-    connected: "Connected", typeReq: "Type your request... ( ⌘ + ↵ to send )",
-    topology: "AI Routing Topology", liveTraffic: "● Live Traffic",
-    subLatency: "Sub-300ms", globalRelay: "Global Relay",
-    encrypted: "Encrypted", e2e: "End-to-End",
-    adaptive: "Adaptive", loadBal: "Load Balancing",
-    consolePage: "API Console", taskPage: "Task Manager", modelPage: "Model Manager",
-    routePage: "Routing Config", usagePage: "Usage Stats", settingsPage: "Settings",
-    pricingPage: "Pricing", faqPage: "FAQ",
-    todo: "To Do", progress: "In Progress", done: "Completed",
-    totalModels: "Total", modelsUnit: " models", onlineUnit: " online",
-    addRoute: "+ Add Routing Rule", routeRules: "Routing Rules",
-    totalReq: "Total Requests", totalTokens: "Total Tokens", avgLat: "Avg Latency", totalCost: "Total Cost",
-    dailyVol: "Daily Request Volume", modelBreakdown: "Model Usage Breakdown",
-    profile: "Profile", username: "Username", emailLabel: "Email", org: "Organization", role: "Role",
-    saveChanges: "Save Changes", preferences: "Preferences",
-    darkMode: "Dark Mode", darkDesc: "Use dark theme interface",
-    notifications: "Notifications", notiDesc: "Receive system alerts",
-    twoFactor: "Two-Factor Auth", tfDesc: "Enhanced account security",
-    apiKeys: "API Keys", copy: "Copy", genKey: "+ Generate New Key",
-    dangerZone: "Danger Zone", deleteAccount: "Delete Account",
-    deleteDesc: "This action is irreversible. All data will be permanently deleted.",
-    upgradeTitle: "Choose a Plan", monthly: "Monthly", yearly: "Yearly (Save 20%)",
-    starterPlan: "Starter", proPlan: "Pro", starterPrice: "$0", proPrice: "$29",
-    starterPriceY: "$0", proPriceY: "$278",
-    perMonth: "/mo", perYear: "/yr",
-    starterFeatures: ["5 models","1K req/day","Community support","Basic routing"],
-    proFeatures: ["48+ models","Unlimited requests","Priority support","Advanced routing","API key management","Team collaboration"],
-    currentPlan: "Current Plan", choosePlan: "Choose Plan",
-    freePlan: "Free", enterprisePlan: "Enterprise",
-    freePrice: "$0", enterprisePrice: "Contact Us",
-    freeFeatures: ["5 basic models","1,000 req/day","Community support","Basic routing","Single user"],
-    proFeaturesP: ["48+ all models","Unlimited requests","Priority support","Advanced routing","API key management","Up to 5 team members"],
-    enterpriseFeatures: ["All models + private deploy","Unlimited req + SLA","24/7 dedicated support","Custom routing","SSO login","Unlimited team members"],
-    proPriceP: "$29", proPricePY: "$23",
-    modelPricing: "Model Price Comparison", officialPrice: "Official", relayPrice: "RelayOS",
-    savings: "Save", inputPrice: "Input", outputPrice: "Output",
-    faqItems: [
-      { q: "What is RelayOS?", a: "RelayOS is a unified AI model API gateway providing intelligent routing, load balancing, and failover. Access 48+ frontier AI models through a single API endpoint, including GPT-4o, Claude 3.5, Gemini 1.5 Pro, and more." },
-      { q: "How do I get started?", a: "After signing up, you'll receive an API key. Simply replace your existing OpenAI API endpoint with RelayOS endpoint. We're fully compatible with the OpenAI API format, making migration effortless." },
-      { q: "Which AI models are supported?", a: "We support OpenAI (GPT-4o, GPT-4-turbo), Anthropic (Claude 3.5 Sonnet, Claude 3 Haiku), Google (Gemini 1.5 Pro), DeepSeek (V4 Pro), Meta (Llama 3.1), Mistral (Mixtral 8x22B), and 48+ more." },
-      { q: "How is pricing calculated?", a: "We charge by actual token usage, 10-30% below official prices. Free tier: 1,000 requests/day. Pro: $29/month. Enterprise: custom pricing available." },
-      { q: "How is data security handled?", a: "All API requests are encrypted via TLS 1.3. We don't store any request content, only metadata for billing and monitoring. SOC 2 Type II certified, GDPR compliant." },
-      { q: "How does intelligent routing work?", a: "RelayOS supports multiple strategies: weighted round-robin, lowest latency, failover, cost optimization, and more. Configure different routing rules for different request types to achieve optimal performance-cost balance." },
-    ],
-    copied: "Copied!", generated: "New key generated!",
+    nav: { home: 'Home', features: 'Features', models: 'Models', pricing: 'Pricing', docs: 'Docs' },
+    hero: {
+      brand: 'RelayOS',
+      title: 'Next-Gen AI Infrastructure Platform',
+      subtitle: 'Unified multi-model routing, token billing & API gateway for enterprises and developers',
+      start: 'Get Started',
+      viewDocs: 'View Docs',
+    },
+    features: {
+      title: 'Core Features',
+      subtitle: 'Comprehensive AI infrastructure solution',
+      items: [
+        { title: 'Smart Routing', desc: 'Auto-select optimal model path with load balancing and failover' },
+        { title: 'Unified API', desc: 'One interface for all major LLMs, OpenAI-compatible format' },
+        { title: 'Token Billing', desc: 'Token-level usage tracking and cost analytics' },
+        { title: 'Multi-Model', desc: 'Support GPT-4o, Claude, Gemini, DeepSeek and 50+ models' },
+        { title: 'Security Gateway', desc: 'Enterprise API key management, rate limiting & access control' },
+        { title: 'Real-time Monitoring', desc: 'Full-chain request tracing, latency analysis & alerting' },
+      ],
+    },
+    models: {
+      title: 'Supported Models',
+      subtitle: 'Connect to leading AI model providers worldwide',
+      list: ['GPT-4o', 'GPT-4o-mini', 'Claude 3.5 Sonnet', 'Claude 3 Opus', 'Gemini 1.5 Pro', 'DeepSeek V3', 'Qwen 2.5', 'Llama 3.1', 'Mistral Large', 'Yi-Large'],
+    },
+    pricing: {
+      title: 'Flexible Pricing',
+      subtitle: 'Pay as you go, transparent billing',
+      partA: {
+        title: 'Conversation Plans',
+        subtitle: 'Monthly subscription with conversation quota',
+        plans: [
+          { name: 'Free', price: '$0', period: '/mo', quota: '100 conversations', multiplier: '1x rate', features: ['Basic model access', 'Standard speed', 'Community support'] },
+          { name: 'Pro', price: '$14', period: '/mo', quota: '5,000 conversations', multiplier: '2x rate', features: ['All model access', 'Priority speed', 'Email support', 'API access'] },
+          { name: 'Enterprise', price: '$69', period: '/mo', quota: 'Unlimited', multiplier: '5x rate', features: ['All model access', 'Fastest speed', 'Dedicated support', 'Custom deploy', 'SLA guarantee'] },
+        ],
+      },
+      partB: {
+        title: 'API Token Billing',
+        subtitle: 'Pay for what you use, per token pricing',
+        headers: ['Model', 'Input Price', 'Output Price'],
+        rows: [
+          ['GPT-4o', '$0.005/1K tokens', '$0.015/1K tokens'],
+          ['GPT-4o-mini', '$0.0003/1K tokens', '$0.001/1K tokens'],
+          ['Claude 3.5 Sonnet', '$0.004/1K tokens', '$0.02/1K tokens'],
+          ['DeepSeek V3', '$0.0001/1K tokens', '$0.0003/1K tokens'],
+          ['Gemini 1.5 Pro', '$0.0035/1K tokens', '$0.01/1K tokens'],
+        ],
+      },
+    },
+    footer: {
+      brand: 'RelayOS',
+      desc: 'Next-Gen AI Infrastructure Platform',
+      product: 'Product',
+      resources: 'Resources',
+      company: 'Company',
+      links: { console: 'Console', api: 'API Docs', status: 'Status', docs: 'Dev Docs', blog: 'Blog', community: 'Community', about: 'About', careers: 'Careers', contact: 'Contact' },
+      copyright: '© 2024 RelayOS. All rights reserved.',
+    },
+    login: {
+      title: 'Welcome Back',
+      subtitle: 'Sign in to your RelayOS account',
+      email: 'Email',
+      password: 'Password',
+      btn: 'Sign In',
+      noAccount: "Don't have an account?",
+      register: 'Sign Up',
+      forgot: 'Forgot password?',
+    },
+    register: {
+      title: 'Create Account',
+      subtitle: 'Start your AI journey',
+      name: 'Username',
+      email: 'Email',
+      password: 'Password',
+      confirm: 'Confirm Password',
+      btn: 'Sign Up',
+      hasAccount: 'Already have an account?',
+      login: 'Sign In',
+    },
+    sidebar: {
+      home: 'Home',
+      console: 'Console',
+      imageGen: 'ImageGen',
+      usage: 'Usage',
+      models: 'Models',
+      routing: 'Routing',
+      settings: 'Settings',
+    },
+    dashboard: {
+      home: {
+        welcome: 'Welcome to RelayOS',
+        heroTitle1: 'One Relay.',
+        heroTitle2: 'Every Model.',
+        subtitle: 'Unified AI Model Routing · Smart Load Balancing · Enterprise Security Gateway',
+        stats: [
+          { label: 'Uptime', value: '99.99', unit: '%', icon: 'uptime' },
+          { label: 'Models', value: '48', unit: '+', icon: 'models' },
+          { label: 'Latency', value: '287', unit: 'ms', icon: 'latency' },
+        ],
+        systemOverview: 'Live System Overview',
+        activeNodes: 'Active Nodes',
+        onlineModels: 'Online Models',
+        avgLatency: 'Avg Latency',
+        successRate: 'Success Rate',
+        recentActivity: 'Recent Activity',
+        systemLogs: 'System Logs',
+        devResources: 'Developer Resources',
+        apiDocs: 'API Docs',
+        sdkGuide: 'SDK Guide',
+      },
+      console: {
+        placeholder: 'Type a message...',
+        send: 'Send',
+        selectModel: 'Select Model',
+      },
+      imageGen: {
+        title: 'AI Image Generation',
+        prompt: 'Describe the image',
+        generate: 'Generate',
+        size: 'Size',
+        style: 'Style',
+        styles: ['Realistic', 'Anime', 'Oil Paint', 'Watercolor', 'Pixel'],
+      },
+      usage: {
+        title: 'Usage Statistics',
+        remaining: 'Remaining Quota',
+        used: 'Used',
+        total: 'Total',
+        logs: 'API Call Logs',
+        headers: ['Time', 'Model', 'Type', 'Tokens', 'Status', 'Latency'],
+        tokenToday: 'Token Usage Today',
+        apiToday: 'API Calls Today',
+      },
+      models: {
+        title: 'Model Management',
+        enabled: 'Enabled',
+        disabled: 'Disabled',
+        configure: 'Configure',
+      },
+      routing: {
+        title: 'Routing Strategy',
+        rules: 'Routing Rules',
+        addRule: 'Add Rule',
+        priority: 'Priority',
+        condition: 'Condition',
+        target: 'Target Model',
+      },
+      settings: {
+        title: 'System Settings',
+        apiKey: 'API Key',
+        generate: 'Generate New Key',
+        webhook: 'Webhook URL',
+        rateLimit: 'Rate Limit',
+        save: 'Save Settings',
+      },
+    },
+    topbar: {
+      status: 'All Systems Operational',
+    },
+    theme: { light: 'Light', dark: 'Dark' },
+    lang: { zh: '中文', en: 'English' },
+    loginBtn: 'Login',
+    registerBtn: 'Register',
+    logout: 'Logout',
   },
 };
 
 
-// ============ GLOBAL STYLES (CSS-in-JS) ============
-const cssText = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0f;--surface:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--text:#e8e8ec;--text2:#8a8a99;--text3:#6b6b80;--purple:#7c5cfc;--purpleG:linear-gradient(135deg,#7c5cfc,#5a3fd6);--green:#00d97e;--orange:#ff9f43;--red:#ff6b6b;--cyan:#4ecdc4;--font:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
-.light-theme{--bg:#f5f5f7;--surface:rgba(0,0,0,0.03);--border:rgba(0,0,0,0.08);--text:#1a1a2e;--text2:#555566;--text3:#777788}
-body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-.card-hover{transition:all .3s cubic-bezier(.16,1,.3,1)}.card-hover:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,92,252,.08);border-color:rgba(124,92,252,.15)!important}
-.nav-item{transition:all .25s}.nav-item:hover{background:rgba(124,92,252,.06)!important;color:#7c5cfc!important}
-.nav-item.active{background:rgba(124,92,252,.1)!important;color:#7c5cfc!important;font-weight:700!important}
-.upgrade-btn{transition:all .3s}.upgrade-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,92,252,.3)}
-.upgrade-btn:active{transform:scale(.97)}
-.send-btn{transition:all .2s}.send-btn:hover{background:linear-gradient(135deg,#8e72ff,#6a4fd4)!important}.send-btn:active{transform:scale(.92)}
-.social-btn{transition:all .2s}.social-btn:hover{border-color:rgba(124,92,252,.3)!important;background:rgba(124,92,252,.06)!important}
-.social-btn:active{transform:scale(.97)}
-.user-info{transition:all .2s}.user-info:hover{background:rgba(255,255,255,.04)!important}
-.rp-card{transition:all .3s}.rp-card:hover{border-color:rgba(124,92,252,.12)!important}
-.activity-item{transition:all .2s}.activity-item:hover{background:rgba(124,92,252,.04);border-radius:6px}
-.model-tag{transition:all .2s}.model-tag:hover{border-color:rgba(124,92,252,.2)!important;transform:translateY(-1px)}
-.feature-card{transition:all .3s}.feature-card:hover{border-color:rgba(124,92,252,.15)!important;transform:translateY(-2px)}
-.tool-icon{transition:all .15s}.tool-icon:hover{color:#7c5cfc!important;transform:scale(1.15)}
-.dev-btn{transition:all .2s}.dev-btn:hover{border-color:rgba(124,92,252,.3)!important;color:#7c5cfc!important}.dev-btn:active{transform:scale(.96)}
-.view-all{transition:color .2s}.view-all:hover{color:#7c5cfc!important}
-.live-badge{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.plan-bar-fill{animation:fillBar 2s ease-out forwards}@keyframes fillBar{from{width:0}to{width:79%}}
-.input-wrap{transition:border-color .2s}.input-wrap:focus-within{border-color:rgba(124,92,252,.4)!important}
-.toast-enter{animation:toastIn .3s ease-out}@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.faq-item{transition:all .3s}.faq-item:hover{border-color:rgba(124,92,252,.15)!important}
-.pricing-card{transition:all .3s}.pricing-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(124,92,252,.12)}
-input:focus,select:focus{outline:none}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(124,92,252,.2);border-radius:2px}
-`;
 
-// ============ SMALL COMPONENTS ============
-function AnimCounter({ target, suffix = "" }) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    let start = 0; const dur = 1500; const st = Date.now();
-    const frame = () => { const p = Math.min((Date.now() - st) / dur, 1); const ease = 1 - Math.pow(1 - p, 3); setV(Number((ease * target).toFixed(target % 1 ? 2 : 0))); if (p < 1) requestAnimationFrame(frame); };
-    requestAnimationFrame(frame);
-  }, [target]);
-  return <>{v}{suffix}</>;
-}
-
-function Sparkline({ color = "#7c5cfc", w = 200, h = 30 }) {
-  const pts = useRef(Array.from({ length: 20 }, () => Math.random())).current;
-  const max = Math.max(...pts);
-  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${(i / 19) * w},${h - (p / max) * h * 0.8 - h * 0.1}`).join(" ");
-  return <svg width={w} height={h} style={{ display: "block" }}><defs><linearGradient id={`sg${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.3"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs><path d={`${path} L${w},${h} L0,${h} Z`} fill={`url(#sg${color.replace("#","")})`}/><path d={path} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>;
-}
-
-function Globe3D() {
-  return (
-    <svg viewBox="0 0 200 200" width="200" height="200" style={{ filter: "drop-shadow(0 0 20px rgba(124,92,252,.2))" }}>
-      <defs><radialGradient id="gg" cx="35%" cy="35%"><stop offset="0%" stopColor="#7c5cfc" stopOpacity="0.15"/><stop offset="100%" stopColor="#0a0a0f" stopOpacity="0.8"/></radialGradient></defs>
-      <circle cx="100" cy="100" r="80" fill="url(#gg)" stroke="rgba(124,92,252,0.15)" strokeWidth="0.5"/>
-      {[20,40,60,80,100,120,140,160].map(y => { const r = Math.sqrt(Math.max(0, 6400 - (y-100)**2)); return r > 0 ? <ellipse key={`h${y}`} cx="100" cy={y} rx={r} ry={r*0.3} fill="none" stroke="rgba(124,92,252,0.08)" strokeWidth="0.5"/> : null; })}
-      {[30,60,90,120,150].map(a => <ellipse key={`v${a}`} cx="100" cy="100" rx={80*Math.sin(a*Math.PI/180)} ry="80" fill="none" stroke="rgba(124,92,252,0.08)" strokeWidth="0.5" transform={`rotate(0,100,100)`}/>)}
-      {[[35,45],[70,30],[55,80],[130,60],[120,110],[80,140],[150,90],[40,120]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="2" fill="#7c5cfc" opacity="0.6"><animate attributeName="opacity" values="0.3;0.8;0.3" dur={`${2+i*0.3}s`} repeatCount="indefinite"/></circle>)}
-      {[[35,45,70,30],[70,30,130,60],[55,80,120,110],[120,110,150,90],[80,140,40,120]].map(([x1,y1,x2,y2],i) => <line key={`l${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(124,92,252,0.12)" strokeWidth="0.5" strokeDasharray="4,4"><animate attributeName="stroke-opacity" values="0.05;0.2;0.05" dur={`${3+i*0.5}s`} repeatCount="indefinite"/></line>)}
-    </svg>
-  );
-}
-
-function RoutingTopology() {
-  const nodes = [
-    { x: 20, y: 50, label: "Client", color: "#7c5cfc" },
-    { x: 140, y: 20, label: "RelayOS", color: "#7c5cfc" },
-    { x: 260, y: 15, label: "GPT-4o", color: "#00d97e" },
-    { x: 260, y: 50, label: "Claude 3.5", color: "#ff9f43" },
-    { x: 260, y: 85, label: "Gemini", color: "#4ecdc4" },
-  ];
-  return (
-    <svg viewBox="0 0 320 100" width="100%" height="100" style={{ display: "block" }}>
-      <line x1="40" y1="50" x2="130" y2="25" stroke="rgba(124,92,252,0.2)" strokeWidth="1" strokeDasharray="4,3"/>
-      {[15,50,85].map(y => <line key={y} x1="160" y1="25" x2="250" y2={y} stroke="rgba(124,92,252,0.12)" strokeWidth="1" strokeDasharray="4,3"/>)}
-      {nodes.map((n,i) => <g key={i}><circle cx={n.x+10} cy={n.y} r="6" fill={`${n.color}15`} stroke={n.color} strokeWidth="1"/><text x={n.x+22} y={n.y+4} fill="var(--text2)" fontSize="8" fontFamily="var(--mono)">{n.label}</text></g>)}
-    </svg>
-  );
-}
-
-function Toast({ message, onDone }) {
-  useEffect(() => { const t = setTimeout(onDone, 2000); return () => clearTimeout(t); }, []);
-  return <div className="toast-enter" style={{ position:"fixed",bottom:30,left:"50%",transform:"translateX(-50%)",background:"var(--purpleG)",color:"#fff",padding:"10px 24px",borderRadius:12,fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 8px 30px rgba(124,92,252,.3)" }}>{message}</div>;
-}
-
-
-// ============ LOGIN PAGE ============
-function LoginPage({ onLogin }) {
-  const { lang, setLang, dark, setDark, t } = useApp();
+// ============ Canvas Particle Background ============
+function ParticleCanvas({ isDark }) {
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
+  const particlesRef = useRef([]);
 
   useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let w = canvas.width = window.innerWidth, h = canvas.height = window.innerHeight;
-    let mouse = { x: w/2, y: h/2 };
-    const nodes = Array.from({ length: 60 }, () => ({ x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, r: Math.random()*2+1 }));
-    const onMove = e => { mouse.x = e.clientX; mouse.y = e.clientY; };
-    window.addEventListener("mousemove", onMove);
-    let raf;
-    const draw = () => {
-      ctx.clearRect(0,0,w,h);
-      nodes.forEach(n => { n.x += n.vx; n.y += n.vy; if(n.x<0||n.x>w) n.vx*=-1; if(n.y<0||n.y>h) n.vy*=-1; });
-      nodes.forEach((a,i) => { nodes.slice(i+1).forEach(b => { const d=Math.hypot(a.x-b.x,a.y-b.y); if(d<150){ ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(124,92,252,${(1-d/150)*0.12})`;ctx.stroke(); }}); });
-      nodes.forEach(n => { const d=Math.hypot(n.x-mouse.x,n.y-mouse.y); if(d<200){ ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(mouse.x,mouse.y);ctx.strokeStyle=`rgba(124,92,252,${(1-d/200)*0.2})`;ctx.stroke(); } ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle="rgba(124,92,252,0.3)";ctx.fill(); });
-      raf = requestAnimationFrame(draw);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
+    const count = 80;
+    const maxDist = 150;
+
+    particlesRef.current = Array.from({ length: count }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.8,
+      r: Math.random() * 2 + 1,
+    }));
+
+    const resize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
     };
-    draw();
-    const onResize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
-    window.addEventListener("resize", onResize);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("mousemove", onMove); window.removeEventListener("resize", onResize); };
+    window.addEventListener('resize', resize);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, w, h);
+      const particles = particlesRef.current;
+      const color = isDark ? '255,255,255' : '124,92,252';
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color},0.5)`;
+        ctx.fill();
+      });
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < maxDist) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(${color},${0.2 * (1 - dist / maxDist)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      animRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animRef.current);
+    };
+  }, [isDark]);
+
+  return <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />;
+}
+
+// ============ Icons (SVG inline) ============
+const Icons = {
+  home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  console: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
+  image: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  chart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  model: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+  route: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v2a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4V6"/><circle cx="18" cy="6" r="3"/></svg>,
+  settings: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+  moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  send: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  logout: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  globe: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  activity: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  server: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>,
+  zap: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  clock: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+};
+
+
+
+// ============ Dashboard Style System ============
+const getDashStyles = (isDark) => {
+  const bg = isDark ? '#0a0f1e' : '#f0f2f5';
+  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.8)';
+  const text = isDark ? '#ffffff' : '#1a1a2e';
+  const textSecondary = isDark ? '#8892a4' : '#64748b';
+  const textTertiary = isDark ? '#4a5568' : '#94a3b8';
+  const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const sidebarBg = isDark ? '#0d1117' : '#ffffff';
+  const sidebarBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const accent = '#4f8ef7';
+  const accentPurple = '#7c5cbf';
+  const selectedBg = isDark ? 'rgba(124,92,191,0.2)' : 'rgba(124,92,191,0.1)';
+  const selectedText = '#a78bfa';
+  const inputBg = isDark ? 'rgba(255,255,255,0.04)' : '#ffffff';
+
+  return {
+    bg, cardBg, text, textSecondary, textTertiary, border, sidebarBg, sidebarBorder,
+    accent, accentPurple, selectedBg, selectedText, inputBg,
+    card: {
+      background: cardBg,
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: `1px solid ${border}`,
+      borderRadius: '12px',
+      padding: '20px',
+      transition: 'all 0.2s ease',
+    },
+    cardHover: {
+      boxShadow: '0 8px 32px rgba(79,142,247,0.15)',
+    },
+  };
+};
+
+// ============ Landing Page Styles (unchanged) ============
+const getLandingStyles = (isDark) => {
+  const bg = isDark ? '#0a0a0f' : '#ffffff';
+  const bgCard = isDark ? 'rgba(20,20,30,0.8)' : 'rgba(255,255,255,0.8)';
+  const text = isDark ? '#e4e4e7' : '#18181b';
+  const textMuted = isDark ? '#a1a1aa' : '#71717a';
+  const border = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+  const accent = '#7c5cfc';
+  const accentLight = isDark ? 'rgba(124,92,252,0.15)' : 'rgba(124,92,252,0.08)';
+  const sidebarBg = isDark ? '#111118' : '#f8f8fc';
+
+  return {
+    bg, bgCard, text, textMuted, border, accent, accentLight, sidebarBg,
+    glass: {
+      background: bgCard,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: `1px solid ${border}`,
+      borderRadius: '16px',
+    },
+    glassCard: {
+      background: bgCard,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: `1px solid ${border}`,
+      borderRadius: '16px',
+      padding: '24px',
+      transition: 'transform 0.3s, box-shadow 0.3s',
+    },
+  };
+};
+
+// ============ SVG Globe Component ============
+function Globe3D() {
+  const [dots, setDots] = useState([]);
+  const [lines, setLines] = useState([]);
+  const animRef = useRef(null);
+  const [rotation, setRotation] = useState(0);
+
+  useEffect(() => {
+    const numDots = 40;
+    const newDots = [];
+    for (let i = 0; i < numDots; i++) {
+      const lat = (Math.random() - 0.5) * Math.PI;
+      const lng = Math.random() * Math.PI * 2;
+      newDots.push({ lat, lng, size: Math.random() * 2 + 1.5, pulse: Math.random() * Math.PI * 2 });
+    }
+    setDots(newDots);
+
+    const newLines = [];
+    for (let i = 0; i < 12; i++) {
+      const a = Math.floor(Math.random() * numDots);
+      let b = Math.floor(Math.random() * numDots);
+      if (b === a) b = (a + 1) % numDots;
+      newLines.push({ from: a, to: b, opacity: Math.random() * 0.4 + 0.2 });
+    }
+    setLines(newLines);
   }, []);
 
-  return (
-    <div style={{ width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--bg)",position:"relative",overflow:"hidden" }}>
-      <canvas ref={canvasRef} style={{ position:"absolute",inset:0 }}/>
-      <div style={{ position:"absolute",top:20,right:20,display:"flex",gap:8,zIndex:10 }}>
-        <button className="social-btn" onClick={() => setLang(lang==="zh"?"en":"zh")} style={{ background:"var(--surface)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 12px",color:"var(--text)",cursor:"pointer",fontSize:12,fontWeight:600 }}>{lang==="zh"?"EN":"中文"}</button>
-        <button className="social-btn" onClick={() => setDark(!dark)} style={{ background:"var(--surface)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 12px",color:"var(--text)",cursor:"pointer",fontSize:16 }}>{dark?"☀️":"🌙"}</button>
-      </div>
-      <div style={{ position:"relative",zIndex:2,width:420,padding:40,borderRadius:20,background:"rgba(20,20,30,0.7)",backdropFilter:"blur(24px)",border:"1px solid rgba(124,92,252,0.1)",boxShadow:"0 24px 80px rgba(0,0,0,0.4)" }}>
-        <div style={{ textAlign:"center",marginBottom:32 }}>
-          <div style={{ fontSize:32,fontWeight:800,letterSpacing:"-1px",marginBottom:4 }}><span style={{ color:"#7c5cfc" }}>⟫</span> RelayOS</div>
-          <p style={{ fontSize:13,color:"var(--text3)" }}>{t.heroSub}</p>
-        </div>
-        <div style={{ marginBottom:16 }}><label style={{ fontSize:11,color:"var(--text3)",display:"block",marginBottom:6,fontWeight:600 }}>{t.email}</label><div className="input-wrap" style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:10,padding:"0 14px",height:44 }}><input style={{ width:"100%",height:"100%",background:"transparent",border:"none",color:"var(--text)",fontSize:14,fontFamily:"var(--font)" }} placeholder="user@relayos.ai"/></div></div>
-        <div style={{ marginBottom:24 }}><label style={{ fontSize:11,color:"var(--text3)",display:"block",marginBottom:6,fontWeight:600 }}>{t.password}</label><div className="input-wrap" style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:10,padding:"0 14px",height:44 }}><input type="password" style={{ width:"100%",height:"100%",background:"transparent",border:"none",color:"var(--text)",fontSize:14,fontFamily:"var(--font)" }} placeholder="••••••••"/></div></div>
-        <button className="upgrade-btn" onClick={onLogin} style={{ width:"100%",height:46,borderRadius:12,border:"none",background:"var(--purpleG)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{t.loginBtn}</button>
-        <div style={{ margin:"24px 0",textAlign:"center",fontSize:11,color:"var(--text3)" }}>{t.socialTitle}</div>
-        <div style={{ display:"flex",gap:10 }}>
-          {[t.github, t.google, t.sso].map(s => <button key={s} className="social-btn" style={{ flex:1,height:40,borderRadius:10,border:"1px solid var(--border)",background:"var(--surface)",color:"var(--text)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)" }}>{s}</button>)}
-        </div>
-        <div style={{ marginTop:24,textAlign:"center",fontSize:12,color:"var(--text3)" }}>{t.noAccount} <span style={{ color:"#7c5cfc",cursor:"pointer",fontWeight:600 }}>{t.register}</span></div>
-      </div>
-    </div>
-  );
-}
+  useEffect(() => {
+    let frame;
+    const animate = () => {
+      setRotation(r => r + 0.003);
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
-// ============ UPGRADE MODAL ============
-function UpgradeModal({ onClose }) {
-  const { t } = useApp();
-  const [yearly, setYearly] = useState(false);
-  return (
-    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ width:560,padding:36,borderRadius:20,background:"rgba(20,20,30,0.95)",border:"1px solid var(--border)",boxShadow:"0 24px 80px rgba(0,0,0,0.5)" }}>
-        <h2 style={{ fontSize:22,fontWeight:800,marginBottom:6 }}>{t.upgradeTitle}</h2>
-        <div style={{ display:"flex",gap:8,marginBottom:24,marginTop:16 }}>
-          <button onClick={() => setYearly(false)} style={{ padding:"6px 16px",borderRadius:20,border:"1px solid var(--border)",background:!yearly?"var(--purpleG)":"transparent",color:!yearly?"#fff":"var(--text3)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)" }}>{t.monthly}</button>
-          <button onClick={() => setYearly(true)} style={{ padding:"6px 16px",borderRadius:20,border:"1px solid var(--border)",background:yearly?"var(--purpleG)":"transparent",color:yearly?"#fff":"var(--text3)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)" }}>{t.yearly}</button>
-        </div>
-        <div style={{ display:"flex",gap:16 }}>
-          {[
-            { name: t.starterPlan, price: yearly ? t.starterPriceY : t.starterPrice, per: yearly ? t.perYear : t.perMonth, features: t.starterFeatures, current: false },
-            { name: t.proPlan, price: yearly ? t.proPriceY : t.proPrice, per: yearly ? t.perYear : t.perMonth, features: t.proFeatures, current: true, featured: true },
-          ].map((p, i) => (
-            <div key={i} style={{ flex:1,padding:24,borderRadius:16,border:`1px solid ${p.featured?"rgba(124,92,252,0.3)":"var(--border)"}`,background:p.featured?"rgba(124,92,252,0.05)":"var(--surface)" }}>
-              <div style={{ fontSize:16,fontWeight:800,marginBottom:12 }}>{p.name}</div>
-              <div style={{ fontSize:32,fontWeight:800,marginBottom:4 }}>{p.price}<span style={{ fontSize:13,fontWeight:400,color:"var(--text3)" }}>{p.per}</span></div>
-              <div style={{ display:"flex",flexDirection:"column",gap:8,margin:"16px 0" }}>
-                {p.features.map((f,j) => <div key={j} style={{ fontSize:12,color:"var(--text2)",display:"flex",alignItems:"center",gap:6 }}><span style={{ color:"var(--green)" }}>✓</span>{f}</div>)}
-              </div>
-              <button className="upgrade-btn" style={{ width:"100%",height:40,borderRadius:10,border:p.featured?"none":"1px solid var(--border)",background:p.featured?"var(--purpleG)":"transparent",color:p.featured?"#fff":"var(--text)",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{p.current ? t.currentPlan : t.choosePlan}</button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-// ============ SUB PAGES ============
-function PageHome({ dd }) {
-  const { t } = useApp();
-  return (
-    <>
-      <section style={{ display:"flex",alignItems:"center",gap:40,marginBottom:28,...dd(0.1) }}>
-        <div style={{ flex:1 }}>
-          <h1 style={{ fontSize:36,fontWeight:800,letterSpacing:"-1.5px",lineHeight:1.1,marginBottom:10 }}>{t.heroTitle1} <span style={{ background:"var(--purpleG)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>{t.heroTitle2}</span></h1>
-          <p style={{ fontSize:14,color:"var(--text3)",marginBottom:20 }}>{t.heroSub}</p>
-          <div style={{ display:"flex",gap:12,flexWrap:"wrap" }}>
-            {[{ icon:"✓",val:99.99,suffix:"%",label:t.uptime },{ icon:"◉",val:48,suffix:"+",label:t.models },{ icon:"⏱",val:287,suffix:"ms",label:t.latencyLabel },{ icon:"▣",val:12,suffix:"",label:t.nodesLabel }].map((s,i) => (
-              <div key={i} className="card-hover" style={{ padding:"12px 16px",borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10 }}>
-                <span style={{ fontSize:16,color:"#7c5cfc" }}>{s.icon}</span>
-                <div><div style={{ fontSize:18,fontWeight:800 }}><AnimCounter target={s.val} suffix={s.suffix}/></div><div style={{ fontSize:9,color:"var(--text3)" }}>{s.label}</div></div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <Globe3D/>
-      </section>
-      <section className="card-hover" style={{ padding:20,borderRadius:16,background:"var(--surface)",border:"1px solid var(--border)",marginBottom:20,...dd(0.2) }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14 }}>
-          <span style={{ fontSize:14,fontWeight:700 }}>{t.apiConsole}</span>
-          <code style={{ fontSize:10,color:"var(--text3)",fontFamily:"var(--mono)",background:"rgba(124,92,252,0.08)",padding:"4px 10px",borderRadius:6 }}>POST /v1/chat/completions</code>
-        </div>
-        <div style={{ display:"flex",gap:12,marginBottom:14,flexWrap:"wrap" }}>
-          <div style={{ display:"flex",alignItems:"center",gap:6 }}><span style={{ fontSize:10,color:"var(--text3)" }}>{t.provider}:</span><select style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 10px",color:"var(--text)",fontSize:12,fontFamily:"var(--mono)" }}><option>openai</option><option>anthropic</option><option>google</option></select></div>
-          <div style={{ display:"flex",alignItems:"center",gap:6 }}><span style={{ fontSize:10,color:"var(--text3)" }}>{t.model}:</span><select style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 10px",color:"var(--text)",fontSize:12,fontFamily:"var(--mono)" }}><option>gpt-4o</option><option>gpt-4-turbo</option></select></div>
-        </div>
-        <div style={{ display:"flex",gap:10 }}>
-          <div className="input-wrap" style={{ flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:10,padding:"0 14px",height:42 }}><input style={{ width:"100%",height:"100%",background:"transparent",border:"none",color:"var(--text)",fontSize:13,fontFamily:"var(--font)" }} placeholder={t.typeReq}/></div>
-          <div className="send-btn" style={{ width:42,height:42,borderRadius:10,background:"var(--purpleG)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,color:"#fff" }}>➤</div>
-        </div>
-      </section>
-      <div style={{ display:"flex",gap:16,...dd(0.3) }}>
-        <div className="card-hover" style={{ flex:1.2,padding:20,borderRadius:16,background:"var(--surface)",border:"1px solid var(--border)" }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}><span style={{ fontSize:14,fontWeight:700 }}>{t.topology}</span><span className="live-badge" style={{ fontSize:10,color:"var(--green)" }}>{t.liveTraffic}</span></div>
-          <RoutingTopology/>
-        </div>
-        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
-          {[{ icon:"✦",title:t.subLatency,desc:t.globalRelay },{ icon:"🔐",title:t.encrypted,desc:t.e2e },{ icon:"⟳",title:t.adaptive,desc:t.loadBal }].map((f,i) => (
-            <div key={i} className="feature-card" style={{ padding:"14px 18px",borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",display:"flex",alignItems:"center",gap:12 }}>
-              <span style={{ fontSize:18 }}>{f.icon}</span>
-              <div><div style={{ fontSize:13,fontWeight:700 }}>{f.title}</div><div style={{ fontSize:10,color:"var(--text3)" }}>{f.desc}</div></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
-  );
-}
-
-function PageConsole({ dd }) {
-  const { t } = useApp();
-  const modelMap = { openai:["gpt-4o","gpt-4-turbo","gpt-3.5-turbo"], anthropic:["claude-3.5-sonnet","claude-3-haiku"], google:["gemini-1.5-pro","gemini-1.5-flash"], deepseek:["deepseek-v4-pro","deepseek-coder"] };
-  const [provider, setProvider] = useState("openai");
-  const [model, setModel] = useState("gpt-4o");
-  const [messages, setMessages] = useState([
-    { role:"system", text:"Connected to RelayOS API Gateway. Ready." },
-    { role:"user", text:"Generate a haiku about distributed systems." },
-    { role:"ai", text:"Packets find their way,\nThrough nodes that never do sleep—\nData flows like streams.", model:"gpt-4o", latency:"287ms" },
-  ]);
-  const [input, setInput] = useState("");
-  const onProviderChange = (p) => { setProvider(p); setModel(modelMap[p][0]); };
-  const send = () => {
-    if (!input.trim()) return;
-    setMessages(p => [...p, { role:"user", text:input }]);
-    setInput("");
-    setTimeout(() => setMessages(p => [...p, { role:"ai", text:"This is a demo response from the RelayOS router.", model, latency:"243ms" }]), 600);
+  const project = (lat, lng) => {
+    const adjustedLng = lng + rotation;
+    const x = Math.cos(lat) * Math.sin(adjustedLng);
+    const y = Math.sin(lat);
+    const z = Math.cos(lat) * Math.cos(adjustedLng);
+    const scale = 1 / (1 + z * 0.3);
+    const px = 150 + x * 110 * scale;
+    const py = 150 - y * 110 * scale;
+    return { x: px, y: py, z, scale };
   };
+
   return (
-    <>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,...dd(0.1) }}><h2 style={{ fontSize:20,fontWeight:800 }}>{t.consolePage}</h2><code style={{ fontSize:10,color:"var(--text3)",fontFamily:"var(--mono)",background:"rgba(124,92,252,0.08)",padding:"4px 10px",borderRadius:6 }}>POST /v1/chat/completions</code></div>
-      <div className="card-hover" style={{ padding:16,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",marginBottom:14,...dd(0.15) }}>
-        <div style={{ display:"flex",alignItems:"center",gap:6 }}><span style={{ fontSize:10,color:"var(--text3)" }}>{t.provider}:</span><select value={provider} onChange={e=>onProviderChange(e.target.value)} style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 10px",color:"var(--text)",fontSize:12,fontFamily:"var(--mono)" }}>{Object.keys(modelMap).map(p=><option key={p}>{p}</option>)}</select></div>
-        <div style={{ display:"flex",alignItems:"center",gap:6 }}><span style={{ fontSize:10,color:"var(--text3)" }}>{t.model}:</span><select value={model} onChange={e=>setModel(e.target.value)} style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 10px",color:"var(--text)",fontSize:12,fontFamily:"var(--mono)" }}>{modelMap[provider].map(m=><option key={m}>{m}</option>)}</select></div>
-        <div style={{ display:"flex",alignItems:"center",gap:6 }}><span style={{ fontSize:10,color:"var(--text3)" }}>{t.strategy}:</span><select style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:8,padding:"6px 10px",color:"var(--text)",fontSize:12,fontFamily:"var(--mono)" }}><option>weighted-round-robin</option><option>lowest-latency</option><option>failover</option></select></div>
-        <div style={{ marginLeft:"auto",fontSize:11,color:"var(--text3)" }}><span style={{ color:"var(--green)" }}>●</span> {t.connected}</div>
+    <svg width="300" height="300" viewBox="0 0 300 300" style={{ overflow: 'visible' }}>
+      <defs>
+        <radialGradient id="globeGrad" cx="40%" cy="35%">
+          <stop offset="0%" stopColor="rgba(79,142,247,0.15)" />
+          <stop offset="100%" stopColor="rgba(124,92,191,0.05)" />
+        </radialGradient>
+      </defs>
+      <circle cx="150" cy="150" r="120" fill="url(#globeGrad)" stroke="rgba(79,142,247,0.3)" strokeWidth="1" />
+      {[0, 30, 60, 90, 120, 150].map((lng, i) => {
+        const points = [];
+        for (let lat = -90; lat <= 90; lat += 10) {
+          const p = project(lat * Math.PI / 180, lng * Math.PI / 180);
+          if (p.z > -0.3) points.push(`${p.x},${p.y}`);
+        }
+        return points.length > 1 ? <polyline key={`m${i}`} points={points.join(' ')} fill="none" stroke="rgba(79,142,247,0.12)" strokeWidth="0.5" /> : null;
+      })}
+      {[-60, -30, 0, 30, 60].map((lat, i) => {
+        const points = [];
+        for (let lng = 0; lng <= 360; lng += 10) {
+          const p = project(lat * Math.PI / 180, lng * Math.PI / 180);
+          if (p.z > -0.3) points.push(`${p.x},${p.y}`);
+        }
+        return points.length > 1 ? <polyline key={`p${i}`} points={points.join(' ')} fill="none" stroke="rgba(79,142,247,0.08)" strokeWidth="0.5" /> : null;
+      })}
+      {lines.map((line, i) => {
+        if (!dots[line.from] || !dots[line.to]) return null;
+        const from = project(dots[line.from].lat, dots[line.from].lng);
+        const to = project(dots[line.to].lat, dots[line.to].lng);
+        if (from.z < -0.2 || to.z < -0.2) return null;
+        return <line key={`l${i}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={`rgba(79,142,247,${line.opacity})`} strokeWidth="0.8" />;
+      })}
+      {dots.map((dot, i) => {
+        const p = project(dot.lat, dot.lng);
+        if (p.z < -0.2) return null;
+        const opacity = 0.4 + p.z * 0.4;
+        return <circle key={`d${i}`} cx={p.x} cy={p.y} r={dot.size * p.scale} fill={`rgba(79,142,247,${opacity})`} />;
+      })}
+    </svg>
+  );
+}
+
+// ============ Animated Counter ============
+function AnimatedCounter({ value, duration = 1200 }) {
+  const [display, setDisplay] = useState('0');
+  const numericValue = parseFloat(value);
+  const isNumeric = !isNaN(numericValue);
+
+  useEffect(() => {
+    if (!isNumeric) { setDisplay(value); return; }
+    let start = 0;
+    const end = numericValue;
+    const startTime = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = start + (end - start) * eased;
+      if (value.includes('.')) {
+        setDisplay(current.toFixed(2));
+      } else {
+        setDisplay(Math.round(current).toString());
+      }
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [value, duration]);
+
+  return <span>{display}</span>;
+}
+
+// ============ Sparkline Component ============
+function Sparkline({ data, color = '#4f8ef7', width = 200, height = 40 }) {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((d - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg width={width} height={height} style={{ display: 'block' }}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={`0,${height} ${points} ${width},${height}`} fill={`${color}22`} stroke="none" />
+    </svg>
+  );
+}
+
+
+
+// ============ Landing Page Navbar (unchanged) ============
+function LandingNav({ t, isDark, setIsDark, lang, setLang, onLogin, onRegister }) {
+  const s = getLandingStyles(isDark);
+  return (
+    <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: '16px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', ...s.glass }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '8px', background: `linear-gradient(135deg, ${s.accent}, #a78bfa)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>R</div>
+        <span style={{ fontWeight: 700, fontSize: 18, color: s.text }}>RelayOS</span>
       </div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",flex:1,display:"flex",flexDirection:"column",minHeight:340,...dd(0.2) }}>
-        <div style={{ flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:12,marginBottom:14 }}>
-          {messages.map((m,i) => (
-            <div key={i} style={{ alignSelf:m.role==="user"?"flex-end":"flex-start",maxWidth:"80%",padding:"10px 14px",borderRadius:12,fontSize:13,lineHeight:1.6,background:m.role==="user"?"rgba(124,92,252,0.15)":"rgba(255,255,255,0.03)",border:`1px solid ${m.role==="user"?"rgba(124,92,252,0.2)":"rgba(255,255,255,0.06)"}`,color:m.role==="system"?"var(--text3)":"var(--text)",fontFamily:m.role==="system"?"var(--mono)":"inherit",whiteSpace:"pre-wrap" }}>
-              {m.text}
-              {m.model && <div style={{ fontSize:9,color:"var(--text3)",marginTop:6,fontFamily:"var(--mono)" }}>{m.model} · {m.latency}</div>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+        {['home', 'features', 'models', 'pricing'].map((k) => (
+          <a key={k} href={`#${k}`} style={{ color: s.textMuted, textDecoration: 'none', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}
+            onMouseEnter={(e) => (e.target.style.color = s.accent)}
+            onMouseLeave={(e) => (e.target.style.color = s.textMuted)}>
+            {t.nav[k]}
+          </a>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} style={{ padding: '6px 12px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.text, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+          {lang === 'zh' ? 'EN' : '中文'}
+        </button>
+        <button onClick={() => setIsDark(!isDark)} style={{ padding: '6px 10px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.text, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          {isDark ? Icons.sun : Icons.moon}
+        </button>
+        <button onClick={onLogin} style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${s.accent}`, background: 'transparent', color: s.accent, cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
+          {t.loginBtn}
+        </button>
+        <button onClick={onRegister} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: `linear-gradient(135deg, ${s.accent}, #a78bfa)`, color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
+          {t.registerBtn}
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+// ============ Hero Section (unchanged) ============
+function HeroSection({ t, isDark, onLogin }) {
+  const s = getLandingStyles(isDark);
+  return (
+    <section id="home" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 20px 80px', position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', background: s.accentLight, marginBottom: '24px' }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.accent, animation: 'pulse 2s infinite' }} />
+        <span style={{ color: s.accent, fontSize: 14, fontWeight: 500 }}>{t.hero.brand}</span>
+      </div>
+      <h1 style={{ fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 800, lineHeight: 1.2, marginBottom: '20px', color: isDark ? '#e4e4e7' : '#18181b', background: isDark ? 'linear-gradient(135deg, #e4e4e7 0%, #7c5cfc 100%)' : 'linear-gradient(135deg, #1a1a2e 0%, #5b21b6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        {t.hero.title}
+      </h1>
+      <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: s.textMuted, maxWidth: '640px', lineHeight: 1.6, marginBottom: '40px' }}>
+        {t.hero.subtitle}
+      </p>
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <button onClick={onLogin} style={{ padding: '14px 32px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${s.accent}, #a78bfa)`, color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 32px rgba(124,92,252,0.3)', transition: 'transform 0.2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+          {t.hero.start}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ============ Features Section (unchanged) ============
+function FeaturesSection({ t, isDark }) {
+  const s = getLandingStyles(isDark);
+  const icons = ['🚀', '🔗', '💰', '🤖', '🔒', '📊'];
+  return (
+    <section id="features" style={{ padding: '100px 40px', position: 'relative', zIndex: 1 }}>
+      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <h2 style={{ fontSize: 36, fontWeight: 700, color: s.text, marginBottom: '12px' }}>{t.features.title}</h2>
+        <p style={{ color: s.textMuted, fontSize: 16 }}>{t.features.subtitle}</p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+        {t.features.items.map((item, i) => (
+          <div key={i} style={{ ...s.glassCard, cursor: 'default' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(124,92,252,0.15)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+            <div style={{ fontSize: 32, marginBottom: '16px' }}>{icons[i]}</div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: s.text, marginBottom: '8px' }}>{item.title}</h3>
+            <p style={{ fontSize: 14, color: s.textMuted, lineHeight: 1.6 }}>{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ============ Models Section (unchanged) ============
+function ModelsSection({ t, isDark }) {
+  const s = getLandingStyles(isDark);
+  return (
+    <section id="models" style={{ padding: '100px 40px', position: 'relative', zIndex: 1 }}>
+      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <h2 style={{ fontSize: 36, fontWeight: 700, color: s.text, marginBottom: '12px' }}>{t.models.title}</h2>
+        <p style={{ color: s.textMuted, fontSize: 16 }}>{t.models.subtitle}</p>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center', maxWidth: '900px', margin: '0 auto' }}>
+        {t.models.list.map((m, i) => (
+          <div key={i} style={{ ...s.glassCard, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: `hsl(${i * 36}, 70%, 60%)` }} />
+            <span style={{ color: s.text, fontSize: 14, fontWeight: 500 }}>{m}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ============ Pricing Section (unchanged) ============
+function PricingSection({ t, isDark }) {
+  const s = getLandingStyles(isDark);
+  return (
+    <section id="pricing" style={{ padding: '100px 40px', position: 'relative', zIndex: 1 }}>
+      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <h2 style={{ fontSize: 36, fontWeight: 700, color: s.text, marginBottom: '12px' }}>{t.pricing.title}</h2>
+        <p style={{ color: s.textMuted, fontSize: 16 }}>{t.pricing.subtitle}</p>
+      </div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', marginBottom: '80px' }}>
+        <h3 style={{ fontSize: 24, fontWeight: 600, color: s.text, textAlign: 'center', marginBottom: '8px' }}>{t.pricing.partA.title}</h3>
+        <p style={{ color: s.textMuted, fontSize: 14, textAlign: 'center', marginBottom: '40px' }}>{t.pricing.partA.subtitle}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          {t.pricing.partA.plans.map((plan, i) => (
+            <div key={i} style={{ ...s.glassCard, textAlign: 'center', position: 'relative', overflow: 'hidden', border: i === 1 ? `2px solid ${s.accent}` : s.glassCard.border }}>
+              {i === 1 && <div style={{ position: 'absolute', top: 12, right: -30, background: s.accent, color: '#fff', padding: '4px 40px', fontSize: 11, fontWeight: 600, transform: 'rotate(45deg)' }}>Popular</div>}
+              <h4 style={{ fontSize: 20, fontWeight: 600, color: s.text, marginBottom: '8px' }}>{plan.name}</h4>
+              <div style={{ fontSize: 40, fontWeight: 800, color: s.accent, marginBottom: '4px' }}>{plan.price}<span style={{ fontSize: 14, fontWeight: 400, color: s.textMuted }}>{plan.period}</span></div>
+              <div style={{ fontSize: 14, color: s.textMuted, marginBottom: '4px' }}>{plan.quota}</div>
+              <div style={{ fontSize: 13, color: s.accent, marginBottom: '20px', fontWeight: 500 }}>{plan.multiplier}</div>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: '24px' }}>
+                {plan.features.map((f, fi) => (
+                  <li key={fi} style={{ fontSize: 14, color: s.textMuted, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <span style={{ color: s.accent }}>&#10003;</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <button style={{ width: '100%', padding: '12px', borderRadius: '10px', border: i === 1 ? 'none' : `1px solid ${s.border}`, background: i === 1 ? `linear-gradient(135deg, ${s.accent}, #a78bfa)` : 'transparent', color: i === 1 ? '#fff' : s.text, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                {t.hero.start}
+              </button>
             </div>
           ))}
         </div>
-        <div style={{ display:"flex",gap:10 }}>
-          <div className="input-wrap" style={{ flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:10,padding:"0 14px",height:42 }}><input style={{ width:"100%",height:"100%",background:"transparent",border:"none",color:"var(--text)",fontSize:13,fontFamily:"var(--font)" }} placeholder={t.typeReq} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")send();}}/></div>
-          <div className="send-btn" onClick={send} style={{ width:42,height:42,borderRadius:10,background:"var(--purpleG)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16,color:"#fff" }}>➤</div>
+      </div>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        <h3 style={{ fontSize: 24, fontWeight: 600, color: s.text, textAlign: 'center', marginBottom: '8px' }}>{t.pricing.partB.title}</h3>
+        <p style={{ color: s.textMuted, fontSize: 14, textAlign: 'center', marginBottom: '40px' }}>{t.pricing.partB.subtitle}</p>
+        <div style={{ ...s.glassCard, overflow: 'hidden', padding: 0 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${s.border}` }}>
+                {t.pricing.partB.headers.map((h, i) => (
+                  <th key={i} style={{ padding: '16px 20px', textAlign: 'left', color: s.textMuted, fontSize: 13, fontWeight: 600, textTransform: 'uppercase' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {t.pricing.partB.rows.map((row, i) => (
+                <tr key={i} style={{ borderBottom: i < t.pricing.partB.rows.length - 1 ? `1px solid ${s.border}` : 'none' }}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} style={{ padding: '14px 20px', color: ci === 0 ? s.text : s.textMuted, fontSize: 14, fontWeight: ci === 0 ? 500 : 400 }}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-    </>
+    </section>
   );
 }
 
-function PageTasks({ dd }) {
-  const { t } = useApp();
-  const [tasks, setTasks] = useState([
-    { id:1,title:"Migrate API keys to v2 format",status:"done",priority:"high" },
-    { id:2,title:"Configure rate limiting for GPT-4o",status:"progress",priority:"high" },
-    { id:3,title:"Set up failover routing for Anthropic",status:"progress",priority:"medium" },
-    { id:4,title:"Add DeepSeek V4 Pro to model pool",status:"todo",priority:"medium" },
-    { id:5,title:"Review monthly usage report",status:"todo",priority:"low" },
-    { id:6,title:"Update SDK to latest version",status:"todo",priority:"low" },
-  ]);
-  const sc = { todo:"var(--text3)",progress:"var(--orange)",done:"var(--green)" };
-  const sl = { todo:t.todo,progress:t.progress,done:t.done };
-  const pc = { high:"var(--red)",medium:"var(--orange)",low:"var(--cyan)" };
-  const toggle = id => setTasks(tasks.map(tk => tk.id===id ? { ...tk, status:{todo:"progress",progress:"done",done:"todo"}[tk.status] } : tk));
+// ============ Footer (unchanged) ============
+function FooterSection({ t, isDark }) {
+  const s = getLandingStyles(isDark);
   return (
-    <>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,...dd(0.1) }}>
-        <h2 style={{ fontSize:20,fontWeight:800 }}>{t.taskPage}</h2>
-        <div style={{ display:"flex",gap:8 }}>{Object.entries(sl).map(([k,v])=><span key={k} style={{ fontSize:11,padding:"4px 10px",borderRadius:20,background:`${sc[k]}15`,color:sc[k],fontWeight:600 }}>{v}: {tasks.filter(tk=>tk.status===k).length}</span>)}</div>
+    <footer style={{ padding: '60px 40px 30px', borderTop: `1px solid ${s.border}`, position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginBottom: '40px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <div style={{ width: 28, height: 28, borderRadius: '6px', background: `linear-gradient(135deg, ${s.accent}, #a78bfa)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12 }}>R</div>
+            <span style={{ fontWeight: 700, fontSize: 16, color: s.text }}>{t.footer.brand}</span>
+          </div>
+          <p style={{ color: s.textMuted, fontSize: 14 }}>{t.footer.desc}</p>
+        </div>
+        <div>
+          <h4 style={{ color: s.text, fontSize: 14, fontWeight: 600, marginBottom: '16px' }}>{t.footer.product}</h4>
+          {['console', 'api', 'status'].map((k) => (
+            <p key={k} style={{ color: s.textMuted, fontSize: 14, margin: '8px 0', cursor: 'pointer' }}>{t.footer.links[k]}</p>
+          ))}
+        </div>
+        <div>
+          <h4 style={{ color: s.text, fontSize: 14, fontWeight: 600, marginBottom: '16px' }}>{t.footer.resources}</h4>
+          {['docs', 'blog', 'community'].map((k) => (
+            <p key={k} style={{ color: s.textMuted, fontSize: 14, margin: '8px 0', cursor: 'pointer' }}>{t.footer.links[k]}</p>
+          ))}
+        </div>
+        <div>
+          <h4 style={{ color: s.text, fontSize: 14, fontWeight: 600, marginBottom: '16px' }}>{t.footer.company}</h4>
+          {['about', 'careers', 'contact'].map((k) => (
+            <p key={k} style={{ color: s.textMuted, fontSize: 14, margin: '8px 0', cursor: 'pointer' }}>{t.footer.links[k]}</p>
+          ))}
+        </div>
       </div>
-      {["progress","todo","done"].map((status,si) => (
-        <div key={status} style={dd(0.15+si*0.1)}>
-          <div style={{ fontSize:12,fontWeight:700,color:sc[status],marginBottom:10,display:"flex",alignItems:"center",gap:6 }}><span>●</span> {sl[status]}</div>
-          <div style={{ display:"flex",flexDirection:"column",gap:8,marginBottom:20 }}>
-            {tasks.filter(tk=>tk.status===status).map(tk => (
-              <div key={tk.id} className="card-hover" onClick={()=>toggle(tk.id)} style={{ padding:"14px 18px",borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",display:"flex",alignItems:"center",gap:14,cursor:"pointer" }}>
-                <div style={{ width:20,height:20,borderRadius:6,border:`2px solid ${sc[status]}`,background:status==="done"?sc[status]:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",flexShrink:0 }}>{status==="done"?"✓":""}</div>
-                <div style={{ flex:1,fontSize:13,fontWeight:600,textDecoration:status==="done"?"line-through":"none",opacity:status==="done"?0.5:1 }}>{tk.title}</div>
-                <span style={{ fontSize:9,padding:"3px 8px",borderRadius:4,background:`${pc[tk.priority]}15`,color:pc[tk.priority],fontWeight:600 }}>{tk.priority}</span>
+      <div style={{ textAlign: 'center', color: s.textMuted, fontSize: 13, paddingTop: '20px', borderTop: `1px solid ${s.border}` }}>
+        {t.footer.copyright}
+      </div>
+    </footer>
+  );
+}
+
+
+
+// ============ Login/Register Modal (unchanged) ============
+function AuthModal({ isOpen, mode, setMode, onClose, onLogin, t, isDark }) {
+  const s = getLandingStyles(isDark);
+  if (!isOpen) return null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }} />
+      <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: 420, padding: '40px', borderRadius: '24px', background: isDark ? 'rgba(15,15,25,0.95)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)', border: `1px solid ${s.border}`, animation: 'scaleIn 0.3s ease', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: s.textMuted, fontSize: 20, cursor: 'pointer' }}>&times;</button>
+        {mode === 'login' ? (
+          <>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text, marginBottom: '8px' }}>{t.login.title}</h2>
+            <p style={{ color: s.textMuted, fontSize: 14, marginBottom: '32px' }}>{t.login.subtitle}</p>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: 13, color: s.textMuted, marginBottom: '6px' }}>{t.login.email}</label>
+              <input type="email" style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', color: s.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: 13, color: s.textMuted, marginBottom: '6px' }}>{t.login.password}</label>
+              <input type="password" style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', color: s.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <p style={{ textAlign: 'right', fontSize: 13, color: s.accent, marginBottom: '24px', cursor: 'pointer' }}>{t.login.forgot}</p>
+            <button onClick={onLogin} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${s.accent}, #a78bfa)`, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: '16px' }}>
+              {t.login.btn}
+            </button>
+            <p style={{ textAlign: 'center', fontSize: 14, color: s.textMuted }}>
+              {t.login.noAccount} <span onClick={() => setMode('register')} style={{ color: s.accent, cursor: 'pointer', fontWeight: 500 }}>{t.login.register}</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text, marginBottom: '8px' }}>{t.register.title}</h2>
+            <p style={{ color: s.textMuted, fontSize: 14, marginBottom: '32px' }}>{t.register.subtitle}</p>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: 13, color: s.textMuted, marginBottom: '6px' }}>{t.register.name}</label>
+              <input type="text" style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', color: s.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: 13, color: s.textMuted, marginBottom: '6px' }}>{t.register.email}</label>
+              <input type="email" style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', color: s.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: 13, color: s.textMuted, marginBottom: '6px' }}>{t.register.password}</label>
+              <input type="password" style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', color: s.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: 13, color: s.textMuted, marginBottom: '6px' }}>{t.register.confirm}</label>
+              <input type="password" style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', color: s.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <button onClick={onLogin} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${s.accent}, #a78bfa)`, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: '16px' }}>
+              {t.register.btn}
+            </button>
+            <p style={{ textAlign: 'center', fontSize: 14, color: s.textMuted }}>
+              {t.register.hasAccount} <span onClick={() => setMode('login')} style={{ color: s.accent, cursor: 'pointer', fontWeight: 500 }}>{t.register.login}</span>
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+// ============ NEW Dashboard Sidebar (220px, new colors) ============
+function Sidebar({ t, isDark, activeTab, setActiveTab, onLogout }) {
+  const s = getDashStyles(isDark);
+  const tabs = [
+    { key: 'home', icon: Icons.home, label: t.sidebar.home },
+    { key: 'console', icon: Icons.console, label: t.sidebar.console },
+    { key: 'imageGen', icon: Icons.image, label: t.sidebar.imageGen },
+    { key: 'usage', icon: Icons.chart, label: t.sidebar.usage },
+    { key: 'models', icon: Icons.model, label: t.sidebar.models },
+    { key: 'routing', icon: Icons.route, label: t.sidebar.routing },
+    { key: 'settings', icon: Icons.settings, label: t.sidebar.settings },
+  ];
+
+  return (
+    <aside style={{ width: 220, height: '100vh', position: 'fixed', left: 0, top: 0, background: s.sidebarBg, borderRight: `1px solid ${s.sidebarBorder}`, display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', marginBottom: '28px' }}>
+        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15 }}>R</div>
+        <span style={{ fontWeight: 700, fontSize: 17, color: s.text }}>RelayOS</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px', height: 44, padding: '0 12px', borderRadius: '8px',
+                border: 'none', borderLeft: isActive ? '3px solid #7c5cbf' : '3px solid transparent',
+                background: isActive ? s.selectedBg : 'transparent',
+                color: isActive ? s.selectedText : s.textSecondary,
+                cursor: 'pointer', fontSize: 14, fontWeight: isActive ? 600 : 400, textAlign: 'left', width: '100%',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}>
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      {/* User info at bottom */}
+      <div style={{ borderTop: `1px solid ${s.border}`, paddingTop: '16px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', marginBottom: '8px' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 600 }}>U</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: s.text }}>User</div>
+            <div style={{ fontSize: 11, color: s.textTertiary }}>user@relayos.com</div>
+          </div>
+        </div>
+        <button onClick={onLogout}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '8px', border: 'none', background: 'transparent', color: s.textSecondary, cursor: 'pointer', fontSize: 13, width: '100%', textAlign: 'left', transition: 'all 0.2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+          onMouseLeave={e => e.currentTarget.style.color = s.textSecondary}>
+          {Icons.logout}
+          {t.logout}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+// ============ NEW Dashboard Top Bar (60px) ============
+function DashTopBar({ t, isDark, setIsDark, lang, setLang }) {
+  const s = getDashStyles(isDark);
+  return (
+    <header style={{ position: 'fixed', top: 0, left: 220, right: 0, height: 60, background: isDark ? 'rgba(10,15,30,0.8)' : 'rgba(240,242,245,0.8)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 24px', gap: '12px', zIndex: 40 }}>
+      <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.textSecondary, cursor: 'pointer', fontSize: 13, fontWeight: 500, transition: 'all 0.2s ease' }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = s.accent}
+        onMouseLeave={e => e.currentTarget.style.borderColor = s.border}>
+        {lang === 'zh' ? 'EN' : '中文'}
+      </button>
+      <button onClick={() => setIsDark(!isDark)} style={{ padding: '6px 10px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s ease' }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = s.accent}
+        onMouseLeave={e => e.currentTarget.style.borderColor = s.border}>
+        {isDark ? Icons.sun : Icons.moon}
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '12px', padding: '6px 14px', borderRadius: '8px', background: isDark ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.08)' }}>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.5)' }} />
+        <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 500 }}>{t.topbar.status}</span>
+      </div>
+    </header>
+  );
+}
+
+
+
+// ============ NEW Dashboard Home ============
+function DashHome({ t, isDark }) {
+  const s = getDashStyles(isDark);
+  const homeT = t.dashboard.home;
+  const [consoleInput, setConsoleInput] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState('OpenAI');
+  const [selectedModel, setSelectedModel] = useState('GPT-4o');
+  const providers = ['OpenAI', 'Anthropic', 'Google', 'DeepSeek'];
+  const modelsByProvider = { OpenAI: ['GPT-4o', 'GPT-4o-mini'], Anthropic: ['Claude 3.5 Sonnet', 'Claude 3 Opus'], Google: ['Gemini 1.5 Pro'], DeepSeek: ['DeepSeek V3'] };
+  const quickModels = ['GPT-4o', 'Claude 3.5', 'Gemini Pro', 'DeepSeek V3', 'Qwen 2.5'];
+
+  const activities = [
+    { time: '2m ago', text: 'API call to GPT-4o completed', status: 'success' },
+    { time: '5m ago', text: 'New model DeepSeek V3 enabled', status: 'info' },
+    { time: '12m ago', text: 'Rate limit warning on key sk-xxx', status: 'warning' },
+    { time: '28m ago', text: 'Webhook delivery successful', status: 'success' },
+  ];
+
+  const logs = [
+    { time: '14:32:01', msg: '[INFO] Request routed to GPT-4o (Azure East US)' },
+    { time: '14:31:58', msg: '[INFO] Token count: 1,250 (input) + 380 (output)' },
+    { time: '14:31:45', msg: '[WARN] Latency spike detected: 520ms' },
+    { time: '14:31:30', msg: '[INFO] Load balancer: switched to backup node' },
+    { time: '14:31:22', msg: '[INFO] Health check passed: all 12 nodes online' },
+  ];
+
+  const sparkData = [45, 52, 48, 61, 55, 67, 72, 68, 75, 80, 77, 82, 85, 79, 88, 92, 87, 95, 91, 98];
+
+  return (
+    <div style={{ display: 'flex', gap: '24px' }}>
+      {/* Left main content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Hero Title + Globe */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+          <div>
+            <h1 style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.1, marginBottom: '12px' }}>
+              <span style={{ color: s.text }}>One Relay.</span><br/>
+              <span style={{ background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Every Model.</span>
+            </h1>
+            <p style={{ fontSize: 15, color: s.textSecondary, maxWidth: 400 }}>{homeT.subtitle}</p>
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            <Globe3D />
+          </div>
+        </div>
+
+        {/* Stats cards */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '28px' }}>
+          {homeT.stats.map((stat, i) => (
+            <div key={i} style={{ ...s.card, flex: 1, position: 'relative', overflow: 'hidden' }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,142,247,0.15)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(79,142,247,0.08)' }} />
+              <div style={{ fontSize: 12, color: s.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: s.accent }}>
+                <AnimatedCounter value={stat.value} /><span style={{ fontSize: 14, fontWeight: 400, color: s.textSecondary, marginLeft: '2px' }}>{stat.unit}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* API Console Panel */}
+        <div style={{ ...s.card, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <span style={{ fontSize: 13, color: s.textSecondary }}>Provider:</span>
+            <select value={selectedProvider} onChange={e => { setSelectedProvider(e.target.value); setSelectedModel(modelsByProvider[e.target.value][0]); }}
+              style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${s.border}`, background: s.inputBg, color: s.text, fontSize: 13, outline: 'none' }}>
+              {providers.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <span style={{ fontSize: 13, color: s.textSecondary }}>Model:</span>
+            <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${s.border}`, background: s.inputBg, color: s.text, fontSize: 13, outline: 'none' }}>
+              {(modelsByProvider[selectedProvider] || []).map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input value={consoleInput} onChange={e => setConsoleInput(e.target.value)} placeholder="Send a test request..."
+              style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(0,0,0,0.3)' : '#f8f9fa', color: s.text, fontSize: 14, outline: 'none' }} />
+            <button style={{ padding: '12px 20px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'transform 0.2s ease' }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              {Icons.send} Send
+            </button>
+          </div>
+        </div>
+
+        {/* Model Quick Switch */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {quickModels.map((m, i) => (
+            <button key={i} style={{ padding: '8px 16px', borderRadius: '20px', border: `1px solid ${s.border}`, background: 'transparent', color: s.textSecondary, fontSize: 12, cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = s.accent; e.currentTarget.style.color = s.accent; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = s.border; e.currentTarget.style.color = s.textSecondary; }}>
+              {m}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Right panel (280px) */}
+      <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* System Overview 2x2 */}
+        <div style={{ ...s.card }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: s.text, marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{homeT.systemOverview}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[
+              { label: homeT.activeNodes, value: '12', color: '#22c55e' },
+              { label: homeT.onlineModels, value: '48', color: '#4f8ef7' },
+              { label: homeT.avgLatency, value: '287ms', color: '#f59e0b' },
+              { label: homeT.successRate, value: '99.98%', color: '#8b5cf6' },
+            ].map((item, i) => (
+              <div key={i} style={{ padding: '10px', borderRadius: '8px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}>
+                <div style={{ fontSize: 11, color: s.textTertiary, marginBottom: '4px' }}>{item.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: item.color }}>{item.value}</div>
               </div>
             ))}
           </div>
+          {/* Sparkline */}
+          <div style={{ marginTop: '14px', padding: '8px 0' }}>
+            <Sparkline data={sparkData} width={236} height={36} />
+          </div>
         </div>
-      ))}
-    </>
+
+        {/* Recent Activity */}
+        <div style={{ ...s.card }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: s.text, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{homeT.recentActivity}</h3>
+          {activities.map((a, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 0', borderBottom: i < activities.length - 1 ? `1px solid ${s.border}` : 'none' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', marginTop: 6, background: a.status === 'success' ? '#22c55e' : a.status === 'warning' ? '#f59e0b' : '#4f8ef7', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 12, color: s.text, lineHeight: 1.4 }}>{a.text}</div>
+                <div style={{ fontSize: 11, color: s.textTertiary }}>{a.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* System Logs */}
+        <div style={{ ...s.card }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: s.text, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{homeT.systemLogs}</h3>
+          {logs.map((log, i) => (
+            <div key={i} style={{ fontSize: 11, fontFamily: 'monospace', color: log.msg.includes('WARN') ? '#f59e0b' : s.textSecondary, padding: '4px 0', borderBottom: i < logs.length - 1 ? `1px solid ${s.border}` : 'none' }}>
+              <span style={{ color: s.textTertiary }}>{log.time}</span> {log.msg}
+            </div>
+          ))}
+        </div>
+
+        {/* Developer Resources */}
+        <div style={{ ...s.card }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: s.text, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{homeT.devResources}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button style={{ padding: '10px 16px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.accent, fontSize: 13, cursor: 'pointer', fontWeight: 500, textAlign: 'left', transition: 'all 0.2s ease' }}
+              onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(79,142,247,0.1)' : 'rgba(79,142,247,0.05)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              📄 {homeT.apiDocs}
+            </button>
+            <button style={{ padding: '10px 16px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.accent, fontSize: 13, cursor: 'pointer', fontWeight: 500, textAlign: 'left', transition: 'all 0.2s ease' }}
+              onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(79,142,247,0.1)' : 'rgba(79,142,247,0.05)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              📦 {homeT.sdkGuide}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function PageModels({ dd }) {
-  const { t } = useApp();
-  const all = [
-    { name:"GPT-4o",provider:"OpenAI",latency:"287ms",status:"active",tokens:"128K",cost:"$5/1M",color:"#00d97e" },
-    { name:"Claude 3.5 Sonnet",provider:"Anthropic",latency:"312ms",status:"active",tokens:"200K",cost:"$3/1M",color:"#7c5cfc" },
-    { name:"Gemini 1.5 Pro",provider:"Google",latency:"268ms",status:"active",tokens:"1M",cost:"$3.5/1M",color:"#4ecdc4" },
-    { name:"DeepSeek V4 Pro",provider:"DeepSeek",latency:"195ms",status:"active",tokens:"64K",cost:"$0.5/1M",color:"#ff6b6b" },
-    { name:"Llama 3.1 70B",provider:"Meta",latency:"342ms",status:"active",tokens:"128K",cost:"$0.8/1M",color:"#ff9f43" },
-    { name:"GPT-4-turbo",provider:"OpenAI",latency:"356ms",status:"standby",tokens:"128K",cost:"$10/1M",color:"#6b6b80" },
-    { name:"Mixtral 8x22B",provider:"Mistral",latency:"298ms",status:"standby",tokens:"64K",cost:"$0.6/1M",color:"#6b6b80" },
-    { name:"Command R+",provider:"Cohere",latency:"410ms",status:"inactive",tokens:"128K",cost:"$3/1M",color:"#6b6b80" },
-  ];
-  const sC = { active:"var(--green)",standby:"var(--orange)",inactive:"var(--red)" };
+
+
+// ============ NEW Console (Lobehub-style chat) ============
+function DashConsole({ t, isDark }) {
+  const s = getDashStyles(isDark);
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: 'Hello! I am your AI assistant powered by RelayOS. How can I help you today?' },
+  ]);
+  const [input, setInput] = useState('');
+  const [model, setModel] = useState('GPT-4o');
+  const models = ['GPT-4o', 'GPT-4o-mini', 'Claude 3.5 Sonnet', 'DeepSeek V3', 'Gemini 1.5 Pro'];
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages((prev) => [...prev, { role: 'user', content: input }]);
+    const userMsg = input;
+    setInput('');
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { role: 'assistant', content: `This is a simulated response from ${model} to: "${userMsg}"` }]);
+    }, 800);
+  };
+
   return (
-    <>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,...dd(0.1) }}><h2 style={{ fontSize:20,fontWeight:800 }}>{t.modelPage}</h2><span style={{ fontSize:12,color:"var(--text3)" }}>{t.totalModels} {all.length} {t.modelsUnit} · {all.filter(m=>m.status==="active").length} {t.onlineUnit}</span></div>
-      <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:14,...dd(0.2) }}>
-        {all.map((m,i) => (
-          <div key={i} className="card-hover" style={{ padding:18,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)" }}>
-            <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:12 }}>
-              <div style={{ width:36,height:36,borderRadius:10,background:`${m.color}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,border:`1px solid ${m.color}30` }}>◉</div>
-              <div style={{ flex:1 }}><div style={{ fontSize:14,fontWeight:700 }}>{m.name}</div><div style={{ fontSize:10,color:"var(--text3)" }}>{m.provider}</div></div>
-              <span style={{ fontSize:9,padding:"3px 8px",borderRadius:10,background:`${sC[m.status]}15`,color:sC[m.status],fontWeight:600 }}>{m.status}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }}>
+      {/* Model Selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px 16px', ...s.card }}>
+        <span style={{ fontSize: 13, color: s.textSecondary }}>{t.dashboard.console.selectModel}:</span>
+        <select value={model} onChange={(e) => setModel(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${s.border}`, background: s.inputBg, color: s.text, fontSize: 13, outline: 'none' }}>
+          {models.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <div style={{ marginLeft: 'auto', fontSize: 12, color: s.textTertiary }}>
+          {Icons.zap} <span style={{ marginLeft: 4 }}>Streaming enabled</span>
+        </div>
+      </div>
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '16px' }}>
+        {messages.map((msg, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', animation: 'fadeIn 0.3s ease' }}>
+            <div style={{
+              maxWidth: '70%', padding: '14px 18px', borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+              background: msg.role === 'user' ? 'linear-gradient(135deg, #7c5cbf, #4f8ef7)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
+              border: msg.role === 'user' ? 'none' : `1px solid ${s.border}`,
+              color: msg.role === 'user' ? '#fff' : s.text, fontSize: 14, lineHeight: 1.6,
+            }}>
+              {msg.content}
             </div>
-            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8 }}>
-              {[{ l:"Latency",v:m.latency },{ l:"Context",v:m.tokens },{ l:"Price",v:m.cost }].map((d,j)=>(
-                <div key={j} style={{ background:"rgba(255,255,255,0.02)",borderRadius:6,padding:"6px 8px",textAlign:"center" }}><div style={{ fontSize:8,color:"var(--text3)",marginBottom:2 }}>{d.l}</div><div style={{ fontSize:12,fontWeight:700 }}>{d.v}</div></div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+      {/* Input */}
+      <div style={{ display: 'flex', gap: '12px', padding: '16px', ...s.card }}>
+        <input
+          value={input} onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          placeholder={t.dashboard.console.placeholder}
+          style={{ flex: 1, padding: '14px 18px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(0,0,0,0.3)' : '#f8f9fa', color: s.text, fontSize: 14, outline: 'none' }}
+        />
+        <button onClick={handleSend} style={{ padding: '14px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: 14, fontWeight: 600, transition: 'transform 0.2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+          {Icons.send} {t.dashboard.console.send}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============ NEW Image Generation ============
+function DashImageGen({ t, isDark }) {
+  const s = getDashStyles(isDark);
+  const [prompt, setPrompt] = useState('');
+  const [size, setSize] = useState('1024x1024');
+  const [style, setStyle] = useState(0);
+  const [generating, setGenerating] = useState(false);
+  const [generated, setGenerated] = useState(false);
+
+  const handleGenerate = () => {
+    setGenerating(true);
+    setGenerated(false);
+    setTimeout(() => { setGenerating(false); setGenerated(true); }, 2000);
+  };
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text, marginBottom: '24px' }}>{t.dashboard.imageGen.title}</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        {/* Left form */}
+        <div style={{ ...s.card }}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: 13, color: s.textSecondary, marginBottom: '8px', fontWeight: 500 }}>{t.dashboard.imageGen.prompt}</label>
+            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
+              rows={4} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(0,0,0,0.3)' : '#f8f9fa', color: s.text, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: 13, color: s.textSecondary, marginBottom: '8px', fontWeight: 500 }}>{t.dashboard.imageGen.size}</label>
+            <select value={size} onChange={(e) => setSize(e.target.value)}
+              style={{ padding: '10px 14px', borderRadius: '8px', border: `1px solid ${s.border}`, background: s.inputBg, color: s.text, fontSize: 13, outline: 'none' }}>
+              {['256x256', '512x512', '1024x1024', '1792x1024'].map((sz) => <option key={sz}>{sz}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: 13, color: s.textSecondary, marginBottom: '8px', fontWeight: 500 }}>{t.dashboard.imageGen.style}</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {t.dashboard.imageGen.styles.map((st, i) => (
+                <button key={i} onClick={() => setStyle(i)}
+                  style={{ padding: '8px 16px', borderRadius: '8px', border: style === i ? 'none' : `1px solid ${s.border}`, background: style === i ? 'linear-gradient(135deg, #4f8ef7, #7c5cbf)' : 'transparent', color: style === i ? '#fff' : s.textSecondary, fontSize: 13, cursor: 'pointer', fontWeight: style === i ? 600 : 400, transition: 'all 0.2s ease' }}>
+                  {st}
+                </button>
               ))}
             </div>
           </div>
-        ))}
+          <button onClick={handleGenerate}
+            style={{ width: '100%', padding: '14px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s ease' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+            {t.dashboard.imageGen.generate}
+          </button>
+        </div>
+        {/* Right preview */}
+        <div style={{ ...s.card, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 360, border: generated ? `1px solid ${s.border}` : `2px dashed ${s.border}` }}>
+          {generating ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 40, height: 40, border: '3px solid rgba(79,142,247,0.2)', borderTop: '3px solid #4f8ef7', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+              <p style={{ color: s.textSecondary, fontSize: 14 }}>Generating...</p>
+            </div>
+          ) : generated ? (
+            <div style={{ width: '100%', height: 300, borderRadius: '10px', background: 'linear-gradient(135deg, rgba(79,142,247,0.15), rgba(124,92,191,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 48, marginBottom: '12px' }}>🎨</div>
+                <p style={{ color: s.textSecondary, fontSize: 14 }}>Generated image preview</p>
+                <p style={{ color: s.accent, fontSize: 12, marginTop: '4px' }}>{size} | {t.dashboard.imageGen.styles[style]}</p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: '12px', opacity: 0.4 }}>🖼️</div>
+              <p style={{ color: s.textTertiary, fontSize: 14 }}>Preview will appear here</p>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
-function PageRouting({ dd }) {
-  const { t } = useApp();
+
+
+// ============ NEW Usage Page ============
+function DashUsage({ t, isDark }) {
+  const s = getDashStyles(isDark);
+  const usedQuota = 3247;
+  const totalQuota = 5000;
+  const percentage = Math.round((usedQuota / totalQuota) * 100);
+
+  const logs = [
+    { time: '2024-03-15 14:32:01', model: 'GPT-4o', type: 'chat', tokens: 1250, status: 'success', latency: '234ms' },
+    { time: '2024-03-15 14:28:45', model: 'Claude 3.5', type: 'chat', tokens: 890, status: 'success', latency: '312ms' },
+    { time: '2024-03-15 14:25:12', model: 'DeepSeek V3', type: 'completion', tokens: 2100, status: 'success', latency: '189ms' },
+    { time: '2024-03-15 14:20:33', model: 'GPT-4o-mini', type: 'chat', tokens: 456, status: 'success', latency: '145ms' },
+    { time: '2024-03-15 14:15:07', model: 'Gemini 1.5', type: 'chat', tokens: 1680, status: 'error', latency: '5012ms' },
+    { time: '2024-03-15 14:10:22', model: 'GPT-4o', type: 'embedding', tokens: 320, status: 'success', latency: '98ms' },
+    { time: '2024-03-15 14:05:44', model: 'Claude 3.5', type: 'chat', tokens: 2340, status: 'success', latency: '445ms' },
+    { time: '2024-03-15 14:01:19', model: 'DeepSeek V3', type: 'completion', tokens: 780, status: 'success', latency: '167ms' },
+  ];
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text, marginBottom: '24px' }}>{t.dashboard.usage.title}</h2>
+      {/* Top cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' }}>
+        {/* Quota */}
+        <div style={{ ...s.card }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: s.text, marginBottom: '14px' }}>{t.dashboard.usage.remaining}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: 12, color: s.textSecondary }}>{t.dashboard.usage.used}: {usedQuota.toLocaleString()}</span>
+            <span style={{ fontSize: 12, color: s.textSecondary }}>{t.dashboard.usage.total}: {totalQuota.toLocaleString()}</span>
+          </div>
+          <div style={{ width: '100%', height: 8, borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+            <div style={{ width: `${percentage}%`, height: '100%', borderRadius: 4, background: 'linear-gradient(90deg, #4f8ef7, #7c5cbf)', transition: 'width 1s ease' }} />
+          </div>
+          <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontSize: 24, fontWeight: 700, color: s.accent }}>{(totalQuota - usedQuota).toLocaleString()}</span>
+            <span style={{ fontSize: 13, color: s.textSecondary }}>{percentage}%</span>
+          </div>
+        </div>
+        {/* Token today */}
+        <div style={{ ...s.card }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,142,247,0.15)'}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: s.text, marginBottom: '14px' }}>{t.dashboard.usage.tokenToday}</h3>
+          <div style={{ fontSize: 28, fontWeight: 700, color: s.accent }}><AnimatedCounter value="48320" /></div>
+          <p style={{ fontSize: 12, color: '#22c55e', marginTop: '6px' }}>+12% from yesterday</p>
+        </div>
+        {/* API calls today */}
+        <div style={{ ...s.card }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,142,247,0.15)'}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: s.text, marginBottom: '14px' }}>{t.dashboard.usage.apiToday}</h3>
+          <div style={{ fontSize: 28, fontWeight: 700, color: s.accent }}><AnimatedCounter value="127" /></div>
+          <p style={{ fontSize: 12, color: s.textSecondary, marginTop: '6px' }}>Avg latency: 245ms</p>
+        </div>
+      </div>
+      {/* Logs table */}
+      <div style={{ ...s.card, padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${s.border}` }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: s.text }}>{t.dashboard.usage.logs}</h3>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${s.border}` }}>
+                {t.dashboard.usage.headers.map((h, i) => (
+                  <th key={i} style={{ padding: '12px 16px', textAlign: 'left', color: s.textTertiary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log, i) => (
+                <tr key={i} style={{ borderBottom: i < logs.length - 1 ? `1px solid ${s.border}` : 'none', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: s.textSecondary, whiteSpace: 'nowrap' }}>{log.time}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: s.text, fontWeight: 500 }}>{log.model}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: s.textSecondary }}>{log.type}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: s.text }}>{log.tokens.toLocaleString()}</td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: 11, fontWeight: 600, background: log.status === 'success' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: log.status === 'success' ? '#22c55e' : '#ef4444' }}>
+                      {log.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: s.textSecondary }}>{log.latency}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ NEW Models Page ============
+function DashModels({ t, isDark }) {
+  const s = getDashStyles(isDark);
+  const modelList = [
+    { name: 'GPT-4o', provider: 'OpenAI', enabled: true, latency: '234ms', cost: '$0.005/1K' },
+    { name: 'GPT-4o-mini', provider: 'OpenAI', enabled: true, latency: '145ms', cost: '$0.0003/1K' },
+    { name: 'Claude 3.5 Sonnet', provider: 'Anthropic', enabled: true, latency: '312ms', cost: '$0.004/1K' },
+    { name: 'Claude 3 Opus', provider: 'Anthropic', enabled: false, latency: '520ms', cost: '$0.015/1K' },
+    { name: 'Gemini 1.5 Pro', provider: 'Google', enabled: true, latency: '280ms', cost: '$0.0035/1K' },
+    { name: 'DeepSeek V3', provider: 'DeepSeek', enabled: true, latency: '189ms', cost: '$0.0001/1K' },
+    { name: 'Qwen 2.5', provider: 'Alibaba', enabled: true, latency: '210ms', cost: '$0.0005/1K' },
+    { name: 'Llama 3.1 70B', provider: 'Meta', enabled: false, latency: '350ms', cost: '$0.001/1K' },
+  ];
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text, marginBottom: '24px' }}>{t.dashboard.models.title}</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px' }}>
+        {modelList.map((m, i) => (
+          <div key={i} style={{ ...s.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,142,247,0.15)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: s.text }}>{m.name}</span>
+                <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: 11, fontWeight: 500, background: m.enabled ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: m.enabled ? '#22c55e' : '#ef4444' }}>
+                  {m.enabled ? t.dashboard.models.enabled : t.dashboard.models.disabled}
+                </span>
+              </div>
+              <p style={{ fontSize: 12, color: s.textSecondary }}>{m.provider} · {m.latency} · {m.cost}</p>
+            </div>
+            <button style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${s.border}`, background: 'transparent', color: s.accent, fontSize: 12, cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(79,142,247,0.1)'; e.currentTarget.style.borderColor = s.accent; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = s.border; }}>
+              {t.dashboard.models.configure}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+// ============ NEW Routing Page ============
+function DashRouting({ t, isDark }) {
+  const s = getDashStyles(isDark);
   const rules = [
-    { name:"Default Route",from:"All Requests",to:"GPT-4o",strategy:"weighted-round-robin",weight:"60%",status:"active" },
-    { name:"Fallback Route",from:"Failed Requests",to:"Claude 3.5",strategy:"failover",weight:"—",status:"active" },
-    { name:"Low-cost Route",from:"Simple Queries",to:"DeepSeek V4",strategy:"lowest-cost",weight:"30%",status:"active" },
-    { name:"High-perf Route",from:"Priority Tasks",to:"GPT-4o",strategy:"lowest-latency",weight:"10%",status:"active" },
-    { name:"Testing Route",from:"Dev Env Only",to:"Llama 3.1",strategy:"round-robin",weight:"—",status:"paused" },
+    { priority: 1, condition: 'model == "gpt-4o" && tokens > 4000', target: 'GPT-4o (Azure East US)', status: 'active' },
+    { priority: 2, condition: 'model == "gpt-4o" && region == "asia"', target: 'GPT-4o (Azure Japan)', status: 'active' },
+    { priority: 3, condition: 'model == "claude-3.5"', target: 'Claude 3.5 Sonnet (Direct)', status: 'active' },
+    { priority: 4, condition: 'cost_priority == "low"', target: 'DeepSeek V3', status: 'active' },
+    { priority: 5, condition: 'fallback == true', target: 'GPT-4o-mini (Default)', status: 'inactive' },
   ];
+
   return (
-    <>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,...dd(0.1) }}><h2 style={{ fontSize:20,fontWeight:800 }}>{t.routePage}</h2><button className="upgrade-btn" style={{ padding:"8px 16px",borderRadius:10,border:"none",background:"var(--purpleG)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{t.addRoute}</button></div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginBottom:18,...dd(0.15) }}>
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}><span style={{ fontSize:14,fontWeight:700 }}>{t.topology}</span><span className="live-badge" style={{ fontSize:10,color:"var(--green)" }}>{t.liveTraffic}</span></div>
-        <RoutingTopology/>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text }}>{t.dashboard.routing.title}</h2>
+        <button style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+          + {t.dashboard.routing.addRule}
+        </button>
       </div>
-      <div style={dd(0.25)}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:12 }}>{t.routeRules}</div>
-        <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
-          {rules.map((r,i) => (
-            <div key={i} className="card-hover" style={{ padding:"14px 18px",borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",display:"flex",alignItems:"center",gap:16 }}>
-              <div style={{ width:6,height:6,borderRadius:"50%",background:r.status==="active"?"var(--green)":"var(--orange)" }}/>
-              <div style={{ flex:1 }}><div style={{ fontSize:13,fontWeight:700 }}>{r.name}</div><div style={{ fontSize:10,color:"var(--text3)" }}>{r.from} → {r.to}</div></div>
-              <code style={{ fontSize:10,color:"var(--text2)",fontFamily:"var(--mono)",background:"rgba(255,255,255,0.03)",padding:"4px 8px",borderRadius:4 }}>{r.strategy}</code>
-              <span style={{ fontSize:12,fontWeight:600,width:40,textAlign:"center" }}>{r.weight}</span>
-              <span style={{ fontSize:9,padding:"3px 8px",borderRadius:10,background:r.status==="active"?"rgba(0,217,126,0.1)":"rgba(255,159,67,0.1)",color:r.status==="active"?"var(--green)":"var(--orange)",fontWeight:600 }}>{r.status}</span>
-            </div>
-          ))}
-        </div>
+      <div style={{ ...s.card, padding: 0, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${s.border}` }}>
+              <th style={{ padding: '14px 16px', textAlign: 'left', color: s.textTertiary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.dashboard.routing.priority}</th>
+              <th style={{ padding: '14px 16px', textAlign: 'left', color: s.textTertiary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.dashboard.routing.condition}</th>
+              <th style={{ padding: '14px 16px', textAlign: 'left', color: s.textTertiary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.dashboard.routing.target}</th>
+              <th style={{ padding: '14px 16px', textAlign: 'left', color: s.textTertiary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rules.map((rule, i) => (
+              <tr key={i} style={{ borderBottom: i < rules.length - 1 ? `1px solid ${s.border}` : 'none', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <td style={{ padding: '14px 16px', fontSize: 14, color: s.accent, fontWeight: 600 }}>#{rule.priority}</td>
+                <td style={{ padding: '14px 16px', fontSize: 12, color: s.text, fontFamily: 'monospace' }}>{rule.condition}</td>
+                <td style={{ padding: '14px 16px', fontSize: 13, color: s.textSecondary }}>{rule.target}</td>
+                <td style={{ padding: '14px 16px' }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: 11, fontWeight: 600, background: rule.status === 'active' ? 'rgba(34,197,94,0.12)' : 'rgba(161,161,170,0.12)', color: rule.status === 'active' ? '#22c55e' : '#a1a1aa' }}>
+                    {rule.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </>
+    </div>
   );
 }
 
-function PageUsage({ dd }) {
-  const { t } = useApp();
-  const daily = [65,78,52,90,85,95,72,88,92,68,84,96,70,82,91,87,76,93,81,74,89,95,83,77,86,94,71,88,92,79];
+// ============ NEW Settings Page ============
+function DashSettings({ t, isDark }) {
+  const s = getDashStyles(isDark);
+  const [apiKey] = useState('sk-relay-xxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+  const [webhook, setWebhook] = useState('https://your-app.com/webhook');
+  const [rateLimit, setRateLimit] = useState('1000');
+
   return (
-    <>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,...dd(0.1) }}><h2 style={{ fontSize:20,fontWeight:800 }}>{t.usagePage}</h2><span style={{ fontSize:12,color:"var(--text3)" }}>2026年5月</span></div>
-      <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,...dd(0.15) }}>
-        {[{ label:t.totalReq,val:"1.24M",change:"+12.3%",color:"var(--green)" },{ label:t.totalTokens,val:"892M",change:"+8.7%",color:"#7c5cfc" },{ label:t.avgLat,val:"287ms",change:"-5.2%",color:"var(--cyan)" },{ label:t.totalCost,val:"$2,847",change:"+15.1%",color:"var(--orange)" }].map((s,i)=>(
-          <div key={i} className="card-hover" style={{ padding:18,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",textAlign:"center" }}>
-            <div style={{ fontSize:10,color:"var(--text3)",marginBottom:6 }}>{s.label}</div>
-            <div style={{ fontSize:24,fontWeight:800,marginBottom:4 }}>{s.val}</div>
-            <div style={{ fontSize:11,color:s.color,fontWeight:600 }}>{s.change}</div>
-            <div style={{ marginTop:8 }}><Sparkline color={s.color} w={120} h={25}/></div>
+    <div>
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: s.text, marginBottom: '24px' }}>{t.dashboard.settings.title}</h2>
+      <div style={{ maxWidth: 600, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ ...s.card }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: s.text, marginBottom: '12px' }}>{t.dashboard.settings.apiKey}</label>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <input value={apiKey} readOnly style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(0,0,0,0.3)' : '#f8f9fa', color: s.textSecondary, fontSize: 13, fontFamily: 'monospace', outline: 'none' }} />
+            <button style={{ padding: '10px 16px', borderRadius: '8px', border: `1px solid ${s.accent}`, background: 'transparent', color: s.accent, fontSize: 13, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(79,142,247,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              {t.dashboard.settings.generate}
+            </button>
           </div>
-        ))}
-      </div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginTop:14,...dd(0.25) }}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:14 }}>{t.dailyVol}</div>
-        <div style={{ display:"flex",alignItems:"flex-end",gap:3,height:140 }}>
-          {daily.map((v,i) => <div key={i} style={{ flex:1,height:`${v*1.3}px`,borderRadius:"4px 4px 0 0",background:`linear-gradient(180deg,rgba(124,92,252,${0.3+v/200}) 0%,rgba(124,92,252,0.05) 100%)`,border:"1px solid rgba(124,92,252,0.1)",borderBottom:"none",cursor:"pointer",minWidth:0 }} title={`Day ${i+1}: ${v}K`}/>)}
         </div>
-        <div style={{ display:"flex",justifyContent:"space-between",marginTop:6,fontSize:9,color:"var(--text3)" }}><span>May 1</span><span>May 10</span><span>May 20</span><span>May 30</span></div>
-      </div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginTop:14,...dd(0.35) }}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:14 }}>{t.modelBreakdown}</div>
-        {[{ model:"GPT-4o",pct:42,cost:"$1,196",color:"#00d97e" },{ model:"Claude 3.5",pct:28,cost:"$797",color:"#7c5cfc" },{ model:"DeepSeek V4",pct:15,cost:"$427",color:"#ff6b6b" },{ model:"Gemini 1.5",pct:10,cost:"$285",color:"#4ecdc4" },{ model:"Others",pct:5,cost:"$142",color:"#6b6b80" }].map((m,i) => (
-          <div key={i} style={{ display:"flex",alignItems:"center",gap:12,marginBottom:10 }}>
-            <span style={{ width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0 }}/>
-            <span style={{ fontSize:12,fontWeight:600,width:120 }}>{m.model}</span>
-            <div style={{ flex:1,height:6,borderRadius:3,background:"rgba(255,255,255,0.04)" }}><div style={{ width:`${m.pct}%`,height:"100%",borderRadius:3,background:m.color,transition:"width 1s" }}/></div>
-            <span style={{ fontSize:11,fontWeight:700,width:35,textAlign:"right" }}>{m.pct}%</span>
-            <span style={{ fontSize:10,color:"var(--text3)",width:60,textAlign:"right" }}>{m.cost}</span>
+        <div style={{ ...s.card }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: s.text, marginBottom: '12px' }}>{t.dashboard.settings.webhook}</label>
+          <input value={webhook} onChange={(e) => setWebhook(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(0,0,0,0.3)' : '#f8f9fa', color: s.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+        <div style={{ ...s.card }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: s.text, marginBottom: '12px' }}>{t.dashboard.settings.rateLimit}</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <input value={rateLimit} onChange={(e) => setRateLimit(e.target.value)}
+              style={{ width: 120, padding: '10px 14px', borderRadius: '8px', border: `1px solid ${s.border}`, background: isDark ? 'rgba(0,0,0,0.3)' : '#f8f9fa', color: s.text, fontSize: 13, outline: 'none' }} />
+            <span style={{ fontSize: 13, color: s.textSecondary }}>requests / minute</span>
           </div>
-        ))}
+        </div>
+        <button style={{ padding: '14px 32px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #7c5cbf)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start', transition: 'transform 0.2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+          {t.dashboard.settings.save}
+        </button>
       </div>
-    </>
+    </div>
   );
 }
 
 
-function PagePricing({ dd }) {
-  const { t } = useApp();
-  const [yearly, setYearly] = useState(false);
-  const modelPrices = [
-    { model:"GPT-4o", input:"$5.00", output:"$15.00", relayIn:"$4.50", relayOut:"$13.50", save:"10%" },
-    { model:"GPT-4-turbo", input:"$10.00", output:"$30.00", relayIn:"$8.00", relayOut:"$24.00", save:"20%" },
-    { model:"Claude 3.5 Sonnet", input:"$3.00", output:"$15.00", relayIn:"$2.70", relayOut:"$13.50", save:"10%" },
-    { model:"Gemini 1.5 Pro", input:"$3.50", output:"$10.50", relayIn:"$2.80", relayOut:"$8.40", save:"20%" },
-    { model:"DeepSeek V4 Pro", input:"$0.50", output:"$2.00", relayIn:"$0.35", relayOut:"$1.40", save:"30%" },
-    { model:"Llama 3.1 70B", input:"$0.80", output:"$0.80", relayIn:"$0.56", relayOut:"$0.56", save:"30%" },
-  ];
-  const plans = [
-    { name:t.freePlan, price:t.freePrice, per:yearly?t.perYear:t.perMonth, features:t.freeFeatures, featured:false },
-    { name:t.proPlan, price:yearly?t.proPricePY:t.proPriceP, per:yearly?t.perYear:t.perMonth, features:t.proFeaturesP, featured:true },
-    { name:t.enterprisePlan, price:t.enterprisePrice, per:"", features:t.enterpriseFeatures, featured:false },
-  ];
-  return (
-    <>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,...dd(0.1) }}>
-        <h2 style={{ fontSize:20,fontWeight:800 }}>{t.pricingPage}</h2>
-        <div style={{ display:"flex",gap:8 }}>
-          <button onClick={()=>setYearly(false)} style={{ padding:"6px 16px",borderRadius:20,border:"1px solid var(--border)",background:!yearly?"var(--purpleG)":"transparent",color:!yearly?"#fff":"var(--text3)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)" }}>{t.monthly}</button>
-          <button onClick={()=>setYearly(true)} style={{ padding:"6px 16px",borderRadius:20,border:"1px solid var(--border)",background:yearly?"var(--purpleG)":"transparent",color:yearly?"#fff":"var(--text3)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)" }}>{t.yearly}</button>
-        </div>
-      </div>
-      <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,...dd(0.15) }}>
-        {plans.map((p,i) => (
-          <div key={i} className="pricing-card" style={{ padding:28,borderRadius:16,background:p.featured?"rgba(124,92,252,0.06)":"var(--surface)",border:`1px solid ${p.featured?"rgba(124,92,252,0.3)":"var(--border)"}`,position:"relative" }}>
-            {p.featured && <div style={{ position:"absolute",top:-10,right:20,background:"var(--purpleG)",color:"#fff",padding:"4px 12px",borderRadius:20,fontSize:10,fontWeight:700 }}>POPULAR</div>}
-            <div style={{ fontSize:16,fontWeight:800,marginBottom:12 }}>{p.name}</div>
-            <div style={{ fontSize:36,fontWeight:800,marginBottom:4 }}>{p.price}<span style={{ fontSize:13,fontWeight:400,color:"var(--text3)" }}>{p.per}</span></div>
-            <div style={{ display:"flex",flexDirection:"column",gap:8,margin:"20px 0" }}>
-              {p.features.map((f,j) => <div key={j} style={{ fontSize:12,color:"var(--text2)",display:"flex",alignItems:"center",gap:6 }}><span style={{ color:"var(--green)" }}>✓</span>{f}</div>)}
-            </div>
-            <button className="upgrade-btn" style={{ width:"100%",height:42,borderRadius:10,border:p.featured?"none":"1px solid var(--border)",background:p.featured?"var(--purpleG)":"transparent",color:p.featured?"#fff":"var(--text)",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{p.featured?t.choosePlan:t.currentPlan}</button>
-          </div>
-        ))}
-      </div>
-      <div className="card-hover" style={{ padding:24,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginTop:24,...dd(0.3) }}>
-        <div style={{ fontSize:15,fontWeight:800,marginBottom:16 }}>{t.modelPricing}</div>
-        <div style={{ display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 80px",gap:0,fontSize:11 }}>
-          <div style={{ padding:"8px 12px",fontWeight:700,color:"var(--text3)",borderBottom:"1px solid var(--border)" }}>{t.model}</div>
-          <div style={{ padding:"8px 12px",fontWeight:700,color:"var(--text3)",borderBottom:"1px solid var(--border)",textAlign:"center" }}>{t.officialPrice} ({t.inputPrice})</div>
-          <div style={{ padding:"8px 12px",fontWeight:700,color:"var(--text3)",borderBottom:"1px solid var(--border)",textAlign:"center" }}>{t.officialPrice} ({t.outputPrice})</div>
-          <div style={{ padding:"8px 12px",fontWeight:700,color:"#7c5cfc",borderBottom:"1px solid var(--border)",textAlign:"center" }}>RelayOS ({t.inputPrice})</div>
-          <div style={{ padding:"8px 12px",fontWeight:700,color:"#7c5cfc",borderBottom:"1px solid var(--border)",textAlign:"center" }}>RelayOS ({t.outputPrice})</div>
-          <div style={{ padding:"8px 12px",fontWeight:700,color:"var(--green)",borderBottom:"1px solid var(--border)",textAlign:"center" }}>{t.savings}</div>
-          {modelPrices.map((m,i) => (
-            <React.Fragment key={i}>
-              <div style={{ padding:"10px 12px",fontWeight:600,borderBottom:"1px solid rgba(255,255,255,0.03)" }}>{m.model}</div>
-              <div style={{ padding:"10px 12px",textAlign:"center",color:"var(--text2)",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"var(--mono)" }}>{m.input}</div>
-              <div style={{ padding:"10px 12px",textAlign:"center",color:"var(--text2)",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"var(--mono)" }}>{m.output}</div>
-              <div style={{ padding:"10px 12px",textAlign:"center",color:"#7c5cfc",fontWeight:600,borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"var(--mono)" }}>{m.relayIn}</div>
-              <div style={{ padding:"10px 12px",textAlign:"center",color:"#7c5cfc",fontWeight:600,borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"var(--mono)" }}>{m.relayOut}</div>
-              <div style={{ padding:"10px 12px",textAlign:"center",color:"var(--green)",fontWeight:700,borderBottom:"1px solid rgba(255,255,255,0.03)" }}>{m.save}</div>
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    </>
-  );
-}
 
-function PageFAQ({ dd }) {
-  const { t } = useApp();
-  const [open, setOpen] = useState(null);
-  return (
-    <>
-      <div style={{ marginBottom:18,...dd(0.1) }}><h2 style={{ fontSize:20,fontWeight:800 }}>{t.faqPage}</h2></div>
-      <div style={{ display:"flex",flexDirection:"column",gap:10,...dd(0.15) }}>
-        {t.faqItems.map((item, i) => (
-          <div key={i} className="faq-item" onClick={() => setOpen(open===i?null:i)} style={{ padding:"18px 22px",borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",cursor:"pointer" }}>
-            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
-              <span style={{ fontSize:14,fontWeight:700 }}>{item.q}</span>
-              <span style={{ fontSize:18,color:"var(--text3)",transition:"transform .3s",transform:open===i?"rotate(45deg)":"rotate(0)" }}>+</span>
-            </div>
-            {open===i && <div style={{ marginTop:12,fontSize:13,lineHeight:1.8,color:"var(--text2)",borderTop:"1px solid var(--border)",paddingTop:12 }}>{item.a}</div>}
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
+// ============ Dashboard Layout ============
+function Dashboard({ t, isDark, setIsDark, lang, setLang, onLogout }) {
+  const s = getDashStyles(isDark);
+  const [activeTab, setActiveTab] = useState('home');
 
-function PageSettings({ dd }) {
-  const { dark, setDark, t } = useApp();
-  const [noti, setNoti] = useState(true);
-  const [tf, setTf] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [keys, setKeys] = useState([
-    { name:"Production Key", key:"sk-relay-prod-****7f3a", d:"2026-03-15" },
-    { name:"Development Key", key:"sk-relay-dev-****b2c1", d:"2026-04-22" },
-  ]);
-
-  const copyKey = (k) => { navigator.clipboard?.writeText(k); setToast(t.copied); };
-  const genKey = () => {
-    const rand = Array.from({ length: 8 }, () => "0123456789abcdef"[Math.floor(Math.random()*16)]).join("");
-    setKeys(prev => [...prev, { name:`Key-${prev.length+1}`, key:`sk-relay-new-****${rand.slice(0,4)}`, d:new Date().toISOString().slice(0,10) }]);
-    setToast(t.generated);
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home': return <DashHome t={t} isDark={isDark} />;
+      case 'console': return <DashConsole t={t} isDark={isDark} />;
+      case 'imageGen': return <DashImageGen t={t} isDark={isDark} />;
+      case 'usage': return <DashUsage t={t} isDark={isDark} />;
+      case 'models': return <DashModels t={t} isDark={isDark} />;
+      case 'routing': return <DashRouting t={t} isDark={isDark} />;
+      case 'settings': return <DashSettings t={t} isDark={isDark} />;
+      default: return <DashHome t={t} isDark={isDark} />;
+    }
   };
 
-  const Toggle = ({ on, fn }) => (
-    <div onClick={fn} className="social-btn" style={{ width:44,height:24,borderRadius:12,cursor:"pointer",background:on?"var(--purpleG)":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",padding:2,transition:"all .3s" }}>
-      <div style={{ width:20,height:20,borderRadius:"50%",background:"#fff",transform:on?"translateX(20px)":"translateX(0)",transition:"transform .3s cubic-bezier(.25,.46,.45,.94)",boxShadow:"0 2px 4px rgba(0,0,0,.3)" }}/>
+  return (
+    <div style={{ background: s.bg, minHeight: '100vh', color: s.text }}>
+      <Sidebar t={t} isDark={isDark} activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+      <DashTopBar t={t} isDark={isDark} setIsDark={setIsDark} lang={lang} setLang={setLang} />
+      <main style={{ marginLeft: 220, paddingTop: 60, padding: '80px 28px 28px 248px', animation: 'fadeIn 0.3s ease' }}>
+        {renderContent()}
+      </main>
     </div>
   );
+}
+
+// ============ Landing Page (unchanged) ============
+function LandingPage({ t, isDark, setIsDark, lang, setLang, onLogin, onRegister }) {
+  const s = getLandingStyles(isDark);
+  return (
+    <div style={{ background: s.bg, minHeight: '100vh', overflow: 'hidden', position: 'relative' }}>
+      <ParticleCanvas isDark={isDark} />
+      <LandingNav t={t} isDark={isDark} setIsDark={setIsDark} lang={lang} setLang={setLang} onLogin={onLogin} onRegister={onRegister} />
+      <HeroSection t={t} isDark={isDark} onLogin={onLogin} />
+      <FeaturesSection t={t} isDark={isDark} />
+      <ModelsSection t={t} isDark={isDark} />
+      <PricingSection t={t} isDark={isDark} />
+      <FooterSection t={t} isDark={isDark} />
+    </div>
+  );
+}
+
+// ============ Global Styles ============
+const globalCSS = `
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(79,142,247,0.3); border-radius: 3px; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  html { scroll-behavior: smooth; }
+`;
+
+// ============ Main App ============
+export default function App() {
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('relayos-theme');
+    return saved ? saved === 'dark' : true;
+  });
+  const [lang, setLang] = useState(() => {
+    const saved = localStorage.getItem('relayos-lang');
+    return saved || 'zh';
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authModal, setAuthModal] = useState({ open: false, mode: 'login' });
+
+  useEffect(() => {
+    localStorage.setItem('relayos-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
+  useEffect(() => {
+    localStorage.setItem('relayos-lang', lang);
+  }, [lang]);
+
+  const t = translations[lang];
+
+  const handleLogin = () => {
+    setAuthModal({ open: false, mode: 'login' });
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
+  const openLoginModal = () => setAuthModal({ open: true, mode: 'login' });
 
   return (
     <>
-      {toast && <Toast message={toast} onDone={() => setToast(null)}/>}
-      <div style={{ marginBottom:18,...dd(0.1) }}><h2 style={{ fontSize:20,fontWeight:800 }}>{t.settingsPage}</h2></div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginBottom:14,...dd(0.15) }}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:16 }}>{t.profile}</div>
-        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14 }}>
-          {[{ l:t.username,v:"Relay User" },{ l:t.emailLabel,v:"user@relayos.ai" },{ l:t.org,v:"RelayOS Team" },{ l:t.role,v:"Admin" }].map((f,i)=>(
-            <div key={i}><div style={{ fontSize:10,color:"var(--text3)",marginBottom:4 }}>{f.l}</div><div className="input-wrap" style={{ background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",borderRadius:10,padding:"0 14px",height:40 }}><input style={{ width:"100%",height:"100%",background:"transparent",border:"none",color:"var(--text)",fontSize:13,fontFamily:"var(--font)" }} defaultValue={f.v}/></div></div>
-          ))}
-        </div>
-        <button className="upgrade-btn" style={{ marginTop:16,padding:"8px 24px",borderRadius:10,border:"none",background:"var(--purpleG)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{t.saveChanges}</button>
-      </div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginBottom:14,...dd(0.25) }}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:16 }}>{t.preferences}</div>
-        {[{ label:t.darkMode,desc:t.darkDesc,on:dark,fn:()=>setDark(!dark) },{ label:t.notifications,desc:t.notiDesc,on:noti,fn:()=>setNoti(!noti) },{ label:t.twoFactor,desc:t.tfDesc,on:tf,fn:()=>setTf(!tf) }].map((s,i) => (
-          <div key={i} style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-            <div><div style={{ fontSize:13,fontWeight:600 }}>{s.label}</div><div style={{ fontSize:10,color:"var(--text3)" }}>{s.desc}</div></div>
-            <Toggle on={s.on} fn={s.fn}/>
-          </div>
-        ))}
-      </div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginBottom:14,...dd(0.35) }}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:16 }}>{t.apiKeys}</div>
-        {keys.map((k,i) => (
-          <div key={i} style={{ display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-            <div style={{ flex:1 }}><div style={{ fontSize:12,fontWeight:600 }}>{k.name}</div><code style={{ fontSize:10,color:"var(--text3)",fontFamily:"var(--mono)" }}>{k.key}</code></div>
-            <span style={{ fontSize:9,color:"var(--text3)" }}>{k.d}</span>
-            <button className="dev-btn" onClick={()=>copyKey(k.key)} style={{ padding:"4px 10px",borderRadius:6,border:"1px solid var(--border)",background:"transparent",color:"var(--text)",fontSize:10,cursor:"pointer",fontFamily:"var(--font)" }}>{t.copy}</button>
-          </div>
-        ))}
-        <button className="upgrade-btn" onClick={genKey} style={{ marginTop:12,padding:"8px 16px",borderRadius:10,border:"none",background:"var(--purpleG)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{t.genKey}</button>
-      </div>
-      <div className="card-hover" style={{ padding:20,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",borderColor:"rgba(255,107,107,0.15)",...dd(0.45) }}>
-        <div style={{ fontSize:13,fontWeight:700,marginBottom:12,color:"var(--red)" }}>{t.dangerZone}</div>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
-          <div><div style={{ fontSize:12,fontWeight:600 }}>{t.deleteAccount}</div><div style={{ fontSize:10,color:"var(--text3)" }}>{t.deleteDesc}</div></div>
-          <button className="dev-btn" style={{ padding:"6px 14px",borderRadius:6,border:"1px solid rgba(255,107,107,0.3)",background:"transparent",color:"var(--red)",fontSize:11,cursor:"pointer",fontFamily:"var(--font)" }}>{t.deleteAccount}</button>
-        </div>
-      </div>
+      <style>{globalCSS}</style>
+      {isLoggedIn ? (
+        <Dashboard t={t} isDark={isDark} setIsDark={setIsDark} lang={lang} setLang={setLang} onLogout={handleLogout} />
+      ) : (
+        <>
+          <LandingPage
+            t={t} isDark={isDark} setIsDark={setIsDark} lang={lang} setLang={setLang}
+            onLogin={openLoginModal}
+            onRegister={() => setAuthModal({ open: true, mode: 'register' })}
+          />
+          <AuthModal
+            isOpen={authModal.open}
+            mode={authModal.mode}
+            setMode={(m) => setAuthModal({ ...authModal, mode: m })}
+            onClose={() => setAuthModal({ open: false, mode: 'login' })}
+            onLogin={handleLogin}
+            t={t}
+            isDark={isDark}
+          />
+        </>
+      )}
     </>
-  );
-}
-
-
-// ============ DASHBOARD ============
-function DashboardPage({ onLogout }) {
-  const { lang, setLang, dark, setDark, t } = useApp();
-  const [show, setShow] = useState(false);
-  const [activeNav, setActiveNav] = useState(0);
-  const [showUpgrade, setShowUpgrade] = useState(false);
-
-  useEffect(() => { setShow(false); const timer = setTimeout(() => setShow(true), 50); return () => clearTimeout(timer); }, [activeNav]);
-
-  const navIcons = ["⌂","▫","☑","◉","⇄","▤","$","?","⚙"];
-
-  const activities = [
-    { action:"Chat Completion",model:"gpt-4o",time:"287ms",color:"#00d97e" },
-    { action:"Image Generation",model:"dall-e-3",time:"532ms",color:"#ff9f43" },
-    { action:"Document Analysis",model:"claude-3.5",time:"312ms",color:"#7c5cfc" },
-    { action:"Code Generation",model:"deepseek-v4",time:"278ms",color:"#4ecdc4" },
-  ];
-  const logs = [
-    { time:"18:42:07",route:"gpt-4o",ms:"287ms" },
-    { time:"18:42:03",route:"claude-3.5",ms:"312ms" },
-    { time:"18:42:01",route:"gemini-1.5",ms:"268ms" },
-    { time:"18:41:58",route:"deepseek-v4",ms:"278ms" },
-    { time:"18:41:55",route:"gpt-4o",ms:"290ms" },
-  ];
-
-  const dd = (delay) => ({ opacity:show?1:0, transform:show?"translateY(0)":"translateY(20px)", transition:`all 0.6s ${delay}s cubic-bezier(.16,1,.3,1)` });
-
-  const pages = [
-    <PageHome dd={dd}/>, <PageConsole dd={dd}/>, <PageTasks dd={dd}/>, <PageModels dd={dd}/>,
-    <PageRouting dd={dd}/>, <PageUsage dd={dd}/>, <PagePricing dd={dd}/>, <PageFAQ dd={dd}/>, <PageSettings dd={dd}/>
-  ];
-
-  return (
-    <div style={{ display:"flex",height:"100vh",background:"var(--bg)",fontFamily:"var(--font)" }}>
-      {showUpgrade && <UpgradeModal onClose={()=>setShowUpgrade(false)}/>}
-      {/* Sidebar */}
-      <aside style={{ width:220,background:"rgba(255,255,255,0.01)",borderRight:"1px solid var(--border)",display:"flex",flexDirection:"column",padding:"16px 12px",flexShrink:0 }}>
-        <div style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 10px",marginBottom:20 }}>
-          <span style={{ fontSize:22,color:"#7c5cfc",fontWeight:800 }}>⟫</span>
-          <span style={{ fontSize:18,fontWeight:800,letterSpacing:"-0.5px" }}>RelayOS</span>
-        </div>
-        <nav style={{ display:"flex",flexDirection:"column",gap:2 }}>
-          {t.nav.map((label, i) => (
-            <div key={i} className={`nav-item${activeNav===i?" active":""}`} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:activeNav===i?700:500,color:activeNav===i?"#7c5cfc":"var(--text2)" }} onClick={()=>setActiveNav(i)}>
-              <span style={{ fontSize:15,width:20,textAlign:"center" }}>{navIcons[i]}</span><span>{label}</span>
-            </div>
-          ))}
-        </nav>
-        <div style={{ flex:1 }}/>
-        <div style={{ padding:16,borderRadius:14,background:"var(--surface)",border:"1px solid var(--border)",marginBottom:12 }}>
-          <div style={{ fontSize:12,fontWeight:700,marginBottom:4 }}>{t.plan}</div>
-          <div style={{ fontSize:10,color:"var(--text3)",marginBottom:8 }}>2026-06-12 {t.expire}</div>
-          <div style={{ height:4,borderRadius:2,background:"rgba(255,255,255,0.06)",marginBottom:4 }}><div className="plan-bar-fill" style={{ height:"100%",borderRadius:2,background:"var(--purpleG)" }}/></div>
-          <div style={{ fontSize:9,color:"var(--text3)",marginBottom:10 }}>79%</div>
-          <button className="upgrade-btn" onClick={()=>setShowUpgrade(true)} style={{ width:"100%",height:34,borderRadius:8,border:"none",background:"var(--purpleG)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font)" }}>{t.upgrade}</button>
-        </div>
-        <div style={{ display:"flex",gap:6,marginBottom:8,padding:"0 4px" }}>
-          <button className="social-btn" onClick={()=>setLang(lang==="zh"?"en":"zh")} style={{ flex:1,height:30,borderRadius:8,border:"1px solid var(--border)",background:"var(--surface)",color:"var(--text)",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"var(--font)" }}>{lang==="zh"?"EN":"中文"}</button>
-          <button className="social-btn" onClick={()=>setDark(!dark)} style={{ width:30,height:30,borderRadius:8,border:"1px solid var(--border)",background:"var(--surface)",color:"var(--text)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center" }}>{dark?"☀️":"🌙"}</button>
-        </div>
-        <div className="user-info" onClick={onLogout} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 8px",borderRadius:10,cursor:"pointer" }}>
-          <div style={{ width:32,height:32,borderRadius:10,background:"var(--purpleG)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff" }}>R</div>
-          <div><div style={{ fontSize:12,fontWeight:700 }}>Relay User</div><div style={{ fontSize:10,color:"var(--text3)" }}>user@relayos.ai</div></div>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main style={{ flex:1,overflowY:"auto",padding:28,display:"flex",flexDirection:"column",gap:14 }}>
-        {pages[activeNav]}
-      </main>
-
-      {/* Right Panel */}
-      <aside style={{ width:280,borderLeft:"1px solid var(--border)",overflowY:"auto",padding:16,display:"flex",flexDirection:"column",gap:14,flexShrink:0 }}>
-        <div className="rp-card" style={{ padding:14,borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",...dd(0.15) }}>
-          <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:6 }}><span style={{ color:"var(--green)",fontSize:8 }}>●</span><span style={{ fontSize:10,color:"var(--text3)" }}>{t.sysStatus}</span></div>
-          <div style={{ fontSize:10,color:"var(--text2)" }}>{t.allOps}</div>
-          <div style={{ display:"flex",alignItems:"center",gap:8,marginTop:10 }}>
-            <div style={{ width:28,height:28,borderRadius:8,background:"var(--purpleG)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff" }}>R</div>
-            <div><div style={{ fontSize:11,fontWeight:700 }}>Relay User</div><div style={{ fontSize:9,color:"var(--text3)" }}>{t.plan}</div></div>
-          </div>
-        </div>
-        <div className="rp-card" style={{ padding:14,borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",...dd(0.25) }}>
-          <div style={{ fontSize:11,fontWeight:700,marginBottom:10 }}>{t.liveOverview}</div>
-          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10 }}>
-            {[{ l:t.activeNodes,v:12 },{ l:t.onlineModels,v:48 },{ l:t.avgLatency,v:287,s:"ms" },{ l:t.successRate,v:99.98,s:"%" }].map((d,i) => (
-              <div key={i} style={{ background:"rgba(255,255,255,0.02)",borderRadius:8,padding:"8px",textAlign:"center" }}>
-                <div style={{ fontSize:8,color:"var(--text3)",marginBottom:2 }}>{d.l}</div>
-                <div style={{ fontSize:14,fontWeight:800 }}><AnimCounter target={d.v} suffix={d.s||""}/></div>
-              </div>
-            ))}
-          </div>
-          <Sparkline color="#7c5cfc" w={220} h={35}/>
-        </div>
-        <div className="rp-card" style={{ padding:14,borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",...dd(0.35) }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}><span style={{ fontSize:11,fontWeight:700 }}>{t.recentActivity}</span><span className="view-all" style={{ fontSize:9,color:"var(--text3)",cursor:"pointer" }}>{t.viewAll}</span></div>
-          {activities.map((a,i) => (
-            <div key={i} className="activity-item" style={{ display:"flex",alignItems:"center",gap:8,padding:"6px 4px" }}>
-              <span style={{ width:6,height:6,borderRadius:"50%",background:a.color }}/>
-              <div style={{ flex:1 }}><div style={{ fontSize:11,fontWeight:600 }}>{a.action}</div><div style={{ fontSize:9,color:"var(--text3)" }}>{a.model}</div></div>
-              <span style={{ fontSize:9,color:"var(--text3)",fontFamily:"var(--mono)" }}>{a.time}</span>
-            </div>
-          ))}
-        </div>
-        <div className="rp-card" style={{ padding:14,borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",...dd(0.45) }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}><span style={{ fontSize:11,fontWeight:700 }}>{t.sysLogs}</span><span className="view-all" style={{ fontSize:9,color:"var(--text3)",cursor:"pointer" }}>{t.viewAll}</span></div>
-          {logs.map((l,i) => (
-            <div key={i} style={{ display:"flex",alignItems:"center",gap:8,padding:"4px 0",fontSize:9,fontFamily:"var(--mono)" }}>
-              <code style={{ color:"var(--text3)" }}>{l.time}</code>
-              <code style={{ color:"var(--text2)",flex:1 }}>Route: {l.route}</code>
-              <code style={{ color:"var(--green)" }}>{l.ms}</code>
-            </div>
-          ))}
-        </div>
-        <div className="rp-card" style={{ padding:14,borderRadius:12,background:"var(--surface)",border:"1px solid var(--border)",...dd(0.5) }}>
-          <div style={{ fontSize:11,fontWeight:700,marginBottom:10 }}>{t.devRes}</div>
-          <div style={{ display:"flex",gap:8 }}>
-            <button className="dev-btn" style={{ flex:1,padding:"8px",borderRadius:8,border:"1px solid var(--border)",background:"transparent",color:"var(--text)",fontSize:11,cursor:"pointer",fontFamily:"var(--font)" }}>{t.apiDocs}</button>
-            <button className="dev-btn" style={{ flex:1,padding:"8px",borderRadius:8,border:"1px solid var(--border)",background:"transparent",color:"var(--text)",fontSize:11,cursor:"pointer",fontFamily:"var(--font)" }}>⊕ SDK</button>
-          </div>
-        </div>
-      </aside>
-    </div>
-  );
-}
-
-// ============ APP ROOT ============
-export default function App() {
-  const [page, setPage] = useState("login");
-  const [lang, setLang] = useState("zh");
-  const [dark, setDark] = useState(true);
-  const t = i18n[lang];
-
-  useEffect(() => {
-    document.documentElement.className = dark ? "" : "light-theme";
-  }, [dark]);
-
-  useEffect(() => {
-    const el = document.getElementById("relayos-style");
-    if (!el) { const s = document.createElement("style"); s.id = "relayos-style"; s.textContent = cssText; document.head.appendChild(s); }
-  }, []);
-
-  return (
-    <AppContext.Provider value={{ lang, setLang, dark, setDark, t }}>
-      {page === "login" ? <LoginPage onLogin={() => setPage("dash")}/> : <DashboardPage onLogout={() => setPage("login")}/>}
-    </AppContext.Provider>
   );
 }
